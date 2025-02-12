@@ -28,10 +28,9 @@ export function LoginForm() {
       const response = await fetch("http://localhost:8000/api/auth/login", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-        Authorization: `Bearer ${access_token}`,
+        Authorization: `Bearer ${access_token}`
         },
-        body: JSON.stringify(data),
+        body: formData,
       })
 
       if (response.ok) {
