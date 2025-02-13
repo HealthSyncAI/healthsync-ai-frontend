@@ -9,7 +9,7 @@ export default function Sidebar() {
     { name: "Dashboard", path: "/dashboard" },
     { name: "Profile", path: "/profile" },
     { name: "Calendar", path: "/calendar" },
-    { name: "Chatbot", path: "/help" },
+    { name: "Chatbot", path: "/chatbot" },
   ];
 
   return (
