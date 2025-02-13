@@ -3,6 +3,7 @@ import Image from "next/image";
 import Chat from "@/components/Chat-bot";
 import { useState, useEffect } from "react";
 import { Tabs, Tab } from "@heroui/tabs";
+import Loading from "@/components/Loading";
 
 interface ChatHistory {
   id: number;
@@ -17,7 +18,9 @@ export default function Chatbot() {
     sender: "bot",
     message: "Hello, how can I help you?",
   };
-  const [messages, setMessages] = useState<{ sender: string; message: string }[]>([initialMessage]);
+  const [messages, setMessages] = useState<
+    { sender: string; message: string }[]
+  >([initialMessage]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [section, setSection] = useState("chatbot");
@@ -123,26 +126,7 @@ export default function Chatbot() {
           {messages.map((msg, index) => (
             <Chat key={index} sender={msg.sender} message={msg.message} />
           ))}
-          {isLoading && (
-            <div className="flex items-start max-w-[70%]">
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
-                    style={{ animationDelay: "0ms" }}
-                  ></div>
-                  <div
-                    className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
-                    style={{ animationDelay: "150ms" }}
-                  ></div>
-                  <div
-                    className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
-                    style={{ animationDelay: "300ms" }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          )}
+          {isLoading && <Loading />}
         </div>
         <div className="flex flex-row gap-4 w-full h-[48px] mt-auto">
           <input
