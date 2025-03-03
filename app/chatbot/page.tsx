@@ -37,7 +37,7 @@ export default function Chatbot() {
       const response = await fetch("http://localhost:8000/api/chatbot/chats", {
         headers: {
           Authorization:
-            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzM5MDg2NzI2fQ.mQbkz_xPFT6SOwWUq57s-zAIgkXVxfpkhwMJMIiVnqI",
+            "Bearer " + process.env.NEXT_PUBLIC_TOKEN,
         },
       });
       if (!response.ok) {
@@ -65,7 +65,7 @@ export default function Chatbot() {
           headers: {
             "Content-Type": "application/json",
             Authorization:
-              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzM5MDg2NzI2fQ.mQbkz_xPFT6SOwWUq57s-zAIgkXVxfpkhwMJMIiVnqI",
+              "Bearer " + process.env.NEXT_PUBLIC_TOKEN,
           },
           body: JSON.stringify({ symptom_text: input }),
         }
