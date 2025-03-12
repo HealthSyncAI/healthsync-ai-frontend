@@ -11,6 +11,7 @@ interface ChatHistory {
   model_response: string;
   triage_advice: string | null;
   created_at: string;
+  room_number: number;
 }
 
 export default function Chatbot() {
@@ -25,6 +26,10 @@ export default function Chatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const [section, setSection] = useState("chatbot");
   const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
+  const [currentRoomNumber, setCurrentRoomNumber] = useState<number | null>(
+    null
+  );
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     if (section === "history") {
@@ -36,8 +41,7 @@ export default function Chatbot() {
     try {
       const response = await fetch("http://localhost:8000/api/chatbot/chats", {
         headers: {
-          Authorization:
-            "Bearer " + process.env.NEXT_PUBLIC_TOKEN,
+          Authorization: "Bearer " + process.env.NEXT_PUBLIC_TOKEN,
         },
       });
       if (!response.ok) {
@@ -46,6 +50,16 @@ export default function Chatbot() {
       const data = await response.json();
       // Store the chat history in reverse order
       setChatHistory(data.reverse());
+
+      // Find the highest room number to use for new chats
+      if (data.length > 0) {
+        const highestRoomNumber = Math.max(
+          ...data.map((chat: { room_number: any }) => chat.room_number || 0)
+        );
+        setCurrentRoomNumber(highestRoomNumber);
+      } else {
+        setCurrentRoomNumber(0);
+      }
     } catch (error) {
       console.error("Error fetching chat history:", error);
     }
@@ -64,10 +78,12 @@ export default function Chatbot() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization:
-              "Bearer " + process.env.NEXT_PUBLIC_TOKEN,
+            Authorization: "Bearer " + "",
           },
-          body: JSON.stringify({ symptom_text: input }),
+          body: JSON.stringify({
+            symptom_text: input,
+            room_number: currentRoomNumber,
+          }),
         }
       );
 
@@ -102,6 +118,24 @@ export default function Chatbot() {
     setIsLoading(false);
   };
 
+  const handleNewChat = async () => {
+    // Create a new chat room by incrementing the current room number
+    const newRoomNumber = (currentRoomNumber || 0) + 1;
+    setCurrentRoomNumber(newRoomNumber);
+
+    // Reset the chat
+    setMessages([initialMessage]);
+    setInput("");
+    setIsLoading(false);
+
+    // Switch to chatbot section if not already there
+    if (section !== "chatbot") {
+      setSection("chatbot");
+    }
+
+    console.log(`Created new chat room: ${newRoomNumber}`);
+  };
+
   const renderChatContent = () => {
     if (section === "history") {
       return (
@@ -123,6 +157,11 @@ export default function Chatbot() {
     return (
       <>
         <div className="flex flex-col gap-4 w-full h-full overflow-y-auto">
+          {currentRoomNumber !== null && (
+            <div className="text-sm text-gray-500 mb-2">
+              Chat Room: {currentRoomNumber}
+            </div>
+          )}
           {messages.map((msg, index) => (
             <Chat key={index} sender={msg.sender} message={msg.message} />
           ))}
@@ -193,8 +232,11 @@ export default function Chatbot() {
       </div>
 
       <div className="flex flex-row gap-6 w-[451px] h-[48px] ml-auto mt-6">
-        <button className="w-full h-full text-[#232323] border-[1px] border-[#ABAEC2] rounded-[8px]">
-          Report problem
+        <button
+          className="w-full h-full text-[#232323] border-[1px] border-[#ABAEC2] rounded-[8px]"
+          onClick={handleNewChat}
+        >
+          New Chat
         </button>
         <button
           className="w-full h-full bg-primary text-white rounded-[8px]"
@@ -203,6 +245,28 @@ export default function Chatbot() {
           End
         </button>
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 relative w-[90%] max-w-md">
+            <p className="text-lg font-semibold text-center mb-4">
+              We recommend you to meet the doctor!
+            </p>
+            <a
+              href="/schedule-appointment"
+              className="block text-center text-blue-600 font-medium hover:underline"
+            >
+              Scheduling an appointment →
+            </a>
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
