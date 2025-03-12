@@ -12,7 +12,7 @@ export function RegisterForm() {
   const [error, setError] = useState(null)
   const router = useRouter()
 
-  async function onSubmit(event: any) {
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
 
