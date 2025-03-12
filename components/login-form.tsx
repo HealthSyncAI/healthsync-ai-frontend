@@ -44,7 +44,7 @@ export function LoginForm() {
         setError(errorData.message || "Invalid username or password")
       }
     } catch (error) {
-      setError("An error occurred during login")
+      setError("An error occurred during login: " + error)
     }
   }
 
