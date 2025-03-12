@@ -42,7 +42,7 @@ export default function Chatbot() {
     try {
       const response = await fetch("http://localhost:8000/api/chatbot/chats", {
         headers: {
-          Authorization: "Bearer " + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzQxNzc2NTk4fQ.fjn4iLhYael9RWZhNZvw0oQYj8M_y0lYDGba1qOZHIw",
+          Authorization: "Bearer " + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzQxNzg2MTI4fQ.7aFl91VFZAFD97fMsEYlORpx9jETDxAarmy-uO6fMmo",
         },
       });
 
@@ -77,7 +77,7 @@ export default function Chatbot() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer " + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzQxNzc2NTk4fQ.fjn4iLhYael9RWZhNZvw0oQYj8M_y0lYDGba1qOZHIw",
+          Authorization: "Bearer " + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzQxNzg2MTI4fQ.7aFl91VFZAFD97fMsEYlORpx9jETDxAarmy-uO6fMmo",
         },
         body: JSON.stringify({
           symptom_text: input,
@@ -164,9 +164,6 @@ export default function Chatbot() {
     return (
       <>
         <div className="flex flex-col gap-4 w-full h-full overflow-y-auto">
-          {currentRoomNumber !== null && (
-            <div className="text-sm text-gray-500 mb-2">Chat Room: {currentRoomNumber}</div>
-          )}
           {messages.map((msg, index) => (
             <Chat key={index} sender={msg.sender} message={msg.message} />
           ))}
@@ -207,7 +204,8 @@ export default function Chatbot() {
           <p className="text-[32px] font-bold text-[#232323]">Online Consult</p>
         </div>
       </div>
-      
+
+      {/* Chat Section */}
       <div className="flex flex-col gap-4 p-6 w-full min-h-[774px] bg-white rounded-[12px] border-[1px] border-black/10">
         {/* Header Section */}
         <div className="flex flex-col gap-2">
@@ -223,7 +221,7 @@ export default function Chatbot() {
         <div className="flex flex-row justify-start items-start gap-8">
           {/* Section Tabs */}
           <div className="flex flex-col">
-            <div className="text-sm font-medium text-gray-700 mb-2">Section</div>
+            <div className="text-sm font-medium text-black mb-2">Section</div>
             <Tabs
               key="section"
               aria-label="Tabs sizes"
@@ -242,7 +240,7 @@ export default function Chatbot() {
           {/* Select Room Dropdown */}
           {section === "history" && chatHistory.length > 0 && (
             <div className="flex flex-col">
-              <div className="text-sm font-medium text-gray-700 mb-2">Chat room</div>
+              <div className="text-sm font-medium text-black mb-2">Chat room</div>
               <select
                 id="room-select"
                 value={selectedRoom || ""}
