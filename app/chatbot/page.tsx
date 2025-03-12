@@ -54,7 +54,7 @@ export default function Chatbot() {
       // Find the highest room number to use for new chats
       if (data.length > 0) {
         const highestRoomNumber = Math.max(
-          ...data.map((chat: { room_number: any }) => chat.room_number || 0)
+          ...data.map((chat: { room_number: number }) => chat.room_number || 0)
         );
         setCurrentRoomNumber(highestRoomNumber);
       } else {
