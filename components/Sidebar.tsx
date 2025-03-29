@@ -7,8 +7,6 @@ export default function Sidebar() {
 
   const menuItems = [
     { name: "Dashboard", path: "/dashboard" },
-    { name: "Profile", path: "/profile" },
-    { name: "Calendar", path: "/calendar" },
     { name: "Chatbot", path: "/chatbot" },
   ];
 

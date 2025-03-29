@@ -1,7 +1,23 @@
+// app/page.tsx
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
+import { LoginForm } from "@/components/login-form";
+import RegisterForm from "@/components/register-form";
 
 export default function Home() {
+  const [showLoginForm, setShowLoginForm] = useState(true);
+
+  const handleLoginClick = () => {
+    setShowLoginForm(true);
+  };
+
+  const handleRegisterClick = () => {
+    setShowLoginForm(false);
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-white font-[family-name:var(--font-geist-sans)]">
       {/* Left Section */}
@@ -38,19 +54,30 @@ export default function Home() {
           Quickly schedule an appointment with a doctor
         </p>
 
-        {/* Log in with Google Button */}
-        <Link href="/login"> {/* Replace "/login" with the path to your login page */}
-      <button className="mt-8 flex items-center justify-center gap-2 px-4 py-2 bg-white rounded-md border-[1px] border-[#E5E5E5] hover:cursor-pointer">
-        <Image
-          src="/images/google-icon.png" // Replace with the path to your Google icon
-          alt="Google Icon"
-          width={22}
-          height={22}
-          className="object-contain"
-        />
-        Log in with Google
-      </button>
-    </Link>
+        {/* Login/Register Links */}
+        <div className="mt-4 flex gap-4">
+          <button
+            onClick={handleLoginClick}
+            className={`text-blue-500 hover:underline ${
+              showLoginForm ? "font-semibold" : ""
+            }`}
+          >
+            Login
+          </button>
+          <button
+            onClick={handleRegisterClick}
+            className={`text-blue-500 hover:underline ${
+              !showLoginForm ? "font-semibold" : ""
+            }`}
+          >
+            Register
+          </button>
+        </div>
+
+        {/* Form Content */}
+        <div className="mt-8 w-full max-w-md">
+          {showLoginForm ? <LoginForm /> : <RegisterForm />}
+        </div>
       </div>
     </div>
   );

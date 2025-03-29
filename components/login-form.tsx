@@ -23,13 +23,9 @@ export function LoginForm() {
     }
     console.log("Form data:", data)
 
-    const access_token = process.env.NEXT_PUBLIC_ADMIN_JWT || ""
     try {
       const response = await fetch("http://localhost:8000/api/auth/login", {
         method: "POST",
-        headers: {
-        Authorization: `Bearer ${access_token}`
-        },
         body: formData,
       })
 
@@ -38,6 +34,7 @@ export function LoginForm() {
         // Store the token in localStorage or a secure cookie
         localStorage.setItem("auth_token", access_token)
         localStorage.setItem("token_type", token_type)
+        localStorage.setItem("username", data.username)
         router.push("/dashboard") // Redirect to dashboard or home page
       } else {
         const errorData = await response.json()
@@ -50,7 +47,6 @@ export function LoginForm() {
       } else {
         setError("An error occurred during login");
       }
-
     }
   }
 
