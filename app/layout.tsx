@@ -23,6 +23,7 @@ export default function RootLayout({
   const pathname = usePathname(); // Get the current route
 
   const isLandingPage = pathname === "/"; // Check if the current route is the landing page
+  const doctorPage = pathname.includes("/doctor"); // Check if the current route is the doctor page
 
   return (
     <html lang="en">
@@ -31,10 +32,10 @@ export default function RootLayout({
       >
         <div className="flex">
           {/* Conditionally render the Sidebar */}
-          {!isLandingPage && <Sidebar />}
+          {!isLandingPage && !doctorPage && <Sidebar />}
 
           {/* Main Content */}
-          <div className={`flex-1 ${isLandingPage ? "bg-white" : "bg-gray"}`}>
+          <div className={`flex-1 ${isLandingPage || doctorPage ? "bg-white" : "bg-gray"}`}>
             {children}
           </div>
         </div>

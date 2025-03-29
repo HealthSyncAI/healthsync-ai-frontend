@@ -332,12 +332,10 @@ export default function Chatbot() {
               <h1 className="text-[24px] font-bold text-[#333]">
                 Consultation Info
               </h1>
-              <p className="text-[16px] text-[#747474]">
-                Lorem ipsum dolor sit amet consectetur. Aliquet at adipiscing et
-                at. Urna cursus justo nunc viverra et ipsum pellentesque sit
-                imperdiet. Sed tortor egestas facilisis purus integer euismod.
-                Vel amet quisque suspendisse in ut magna bibendum.
-              </p>
+                <p className="text-[16px] text-[#747474]">
+                Chat with our AI-powered chatbot to get started or view your chat history. You can also schedule an appointment with a doctor. The chatbot is just for pre-scanning.
+                For more accurate diagnosis, please consult a doctor in person.
+                </p>
             </div>
 
             {/* Tabs and Select Room */}
