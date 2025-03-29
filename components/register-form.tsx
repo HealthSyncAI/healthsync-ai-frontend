@@ -23,6 +23,13 @@ export function RegisterForm() {
       password: formData.get("password"),
       first_name: formData.get("first_name"),
       last_name: formData.get("last_name"),
+      date_of_birth: formData.get("date_of_birth"),
+      gender: formData.get("gender"),
+      height_cm: parseFloat(formData.get("height_cm") as string),
+      weight_kg: parseFloat(formData.get("weight_kg") as string),
+      blood_type: formData.get("blood_type"),
+      allergies: formData.get("allergies"),
+      existing_conditions: formData.get("existing_conditions"),
     }
 
     console.log("Form data:", data)
@@ -73,6 +80,34 @@ export function RegisterForm() {
           <div className="space-y-2">
             <Label htmlFor="last_name">Last Name</Label>
             <Input id="last_name" name="last_name" required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="date_of_birth">Date of Birth</Label>
+            <Input id="date_of_birth" name="date_of_birth" type="date" required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="gender">Gender</Label>
+            <Input id="gender" name="gender" required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="height_cm">Height (cm)</Label>
+            <Input id="height_cm" name="height_cm" type="number" step="0.1" required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="weight_kg">Weight (kg)</Label>
+            <Input id="weight_kg" name="weight_kg" type="number" step="0.1" required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="blood_type">Blood Type</Label>
+            <Input id="blood_type" name="blood_type" required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="allergies">Allergies</Label>
+            <Input id="allergies" name="allergies" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="existing_conditions">Existing Conditions</Label>
+            <Input id="existing_conditions" name="existing_conditions" />
           </div>
         </CardContent>
         <CardFooter>

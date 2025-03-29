@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -30,7 +31,7 @@ export default function Home() {
             Welcome to{" "}
           </h1>
           <h1 className="text-4xl font-bold text-center text-primary">
-            Next.js!
+            HealthSync!
           </h1>
         </div>
         <p className="text-lg text-[#333]">
@@ -38,16 +39,18 @@ export default function Home() {
         </p>
 
         {/* Log in with Google Button */}
-        <button className="mt-8 flex items-center justify-center gap-2 px-4 py-2 bg-white rounded-md border-[1px] boder-[#E5E5E5] hover:cursor-pointer">
-          <Image
-            src="/images/google-icon.png" // Replace with the path to your Google icon
-            alt="Google Icon"
-            width={22}
-            height={22}
-            className="object-contain"
-          />
-          Log in with Google
-        </button>
+        <Link href="/login"> {/* Replace "/login" with the path to your login page */}
+      <button className="mt-8 flex items-center justify-center gap-2 px-4 py-2 bg-white rounded-md border-[1px] border-[#E5E5E5] hover:cursor-pointer">
+        <Image
+          src="/images/google-icon.png" // Replace with the path to your Google icon
+          alt="Google Icon"
+          width={22}
+          height={22}
+          className="object-contain"
+        />
+        Log in with Google
+      </button>
+    </Link>
       </div>
     </div>
   );
