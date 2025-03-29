@@ -23,7 +23,6 @@ interface BookingBoxProps {
 }
 
 export default function BookingBox({
-  onClose,
   onBack,
   onDoctorSelected,onDateSelected,
   onTimeSelected,

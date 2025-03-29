@@ -1,4 +1,5 @@
 // components/Header.tsx
+import Link from 'next/link';
 import React from 'react';
 
 const Header: React.FC = () => {
@@ -9,13 +10,13 @@ const Header: React.FC = () => {
         <nav>
           <ul className="flex space-x-4">
             <li>
-              <a href="/" className="hover:text-gray-200">Home</a>
+              <Link href="/" className="hover:text-gray-200">Home</Link>
             </li>
             <li>
-              <a href="/patients" className="hover:text-gray-200">Patients</a>
+              <Link href="/patients" className="hover:text-gray-200">Patients</Link>
             </li>
             <li>
-              <a href="/doctors" className="hover:text-gray-200">Doctors</a>
+              <Link href="/doctors" className="hover:text-gray-200">Doctors</Link>
             </li>
             {/* Add more links as needed */}
           </ul>

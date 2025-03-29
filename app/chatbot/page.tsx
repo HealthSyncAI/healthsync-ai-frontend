@@ -140,13 +140,6 @@ export default function Chatbot() {
     setInput("");
   };
 
-  const handleEndChat = () => {
-    setMessages([initialMessage]);
-    setInput("");
-    setIsLoading(false);
-    setTriageAdvice(null);
-  };
-
   const handleNewChat = () => {
     const newRoomNumber = (currentRoomNumber || 0) + 1;
     setCurrentRoomNumber(newRoomNumber);
