@@ -1,5 +1,6 @@
 // BookingBox Component
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 interface Doctor {
   id: number;
@@ -33,7 +34,8 @@ export default function BookingBox({
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [selectedDoctorInternal, setSelectedDoctorInternal] = useState<Doctor | null>(null);
 
-  const token = process.env.NEXT_PUBLIC_TOKEN;
+  const token = localStorage.getItem("auth_token") || "";
+  const router = useRouter();
 
   useEffect(() => {
     fetchDoctors();
@@ -66,6 +68,11 @@ export default function BookingBox({
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          alert("Your session has expired. Please log in again.");
+          router.push("/"); // Navigate to the login page
+          return;
+        }
         throw new Error("Failed to fetch doctors");
       }
 

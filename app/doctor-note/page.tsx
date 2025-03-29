@@ -7,7 +7,7 @@ import { DoctorNote } from '@/types/healthRecord';
 
 const DoctorNotePage = () => {
   const handleSubmit = async (note: Omit<DoctorNote, 'id' | 'doctor_id' | 'record_type' | 'created_at' | 'updated_at'>) => {
-    const token = process.env.NEXT_PUBLIC_TOKEN;
+    const token = localStorage.getItem('auth_token') || '';
 
     try {
       const response = await fetch('http://localhost:8000/api/health-record/doctor-note', {

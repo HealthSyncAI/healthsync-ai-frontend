@@ -4,6 +4,7 @@ import Chat from "@/components/Chat-bot";
 import BookingBox from "@/components/Booking-box"; // Import the Appointment component
 import { useState, useEffect } from "react";
 import Loading from "@/components/Loading";
+import { useRouter } from "next/navigation"; // Import useRouter
 
 interface Chat {
   id: number;
@@ -56,10 +57,15 @@ export default function Chatbot() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
-  const token = process.env.NEXT_PUBLIC_TOKEN;
+  const router = useRouter();
+  const token = localStorage.getItem("auth_token") || "";
+
+  const [firstName, setFirstName] = useState("");
 
   useEffect(() => {
     fetchChatHistory();
+    const storedFirstName = localStorage.getItem("username") || "";
+    setFirstName(storedFirstName);
   }, []);
 
   const fetchChatHistory = async () => {
@@ -71,6 +77,11 @@ export default function Chatbot() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          alert("Your session has expired. Please log in again.");
+          router.push("/"); // Navigate to the login page
+          return;
+        }
         throw new Error("Failed to fetch chat history");
       }
 
@@ -115,6 +126,11 @@ export default function Chatbot() {
       );
 
       if (!response.ok) {
+        if (response.status === 401) {
+          alert("Your session has expired. Please log in again.");
+          router.push("/"); // Navigate to the login page
+          return;
+        }
         throw new Error("Failed to fetch response from the server");
       }
 
@@ -189,6 +205,11 @@ export default function Chatbot() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          alert("Your session has expired. Please log in again.");
+          router.push("/"); // Navigate to the login page
+          return;
+        }
         const errorData = await response.json();
         console.error("Error creating appointment:", errorData);
         alert(`Failed to create appointment: ${errorData.message || "Unknown error"}`);
@@ -303,7 +324,7 @@ export default function Chatbot() {
     <div className="flex flex-col justify-start min-h-screen font-[family-name:var(--font-geist-sans)] p-6 gap-4">
       <div className="flex flex-row items-center justify-between h-[78px] w-full">
         <div className="flex flex-col">
-          <p className="text-[20px] text-[#747474]">Hi, Jane Doe!</p>
+          <p className="text-[20px] text-[#747474]">Hi, {firstName}!</p>
           <p className="text-[32px] font-bold text-[#232323]">Online Consult</p>
         </div>
       </div>

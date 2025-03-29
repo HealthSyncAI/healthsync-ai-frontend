@@ -4,7 +4,7 @@ export default function DashboardSearchbar() {
       <input
         type="text"
         placeholder="Search for patients, appointments, etc."
-        className="text-[#7A7D84] bg-[#EEEEEE] text-lg rounded-md"
+        className="w-full text-[#7A7D84] bg-[#EEEEEE] text-lg rounded-md"
       />
       <button className="bg-primary w-[82px] h-full text-white rounded-md">
         Search
