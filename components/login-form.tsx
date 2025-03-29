@@ -43,8 +43,12 @@ export function LoginForm() {
         const errorData = await response.json()
         setError(errorData.message || "Invalid username or password")
       }
-    } catch (error) {
-      setError("An error occurred during login")
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message || "An error occurred during login");
+      } else {
+        setError("An error occurred during login");
+      }
     }
   }
 
