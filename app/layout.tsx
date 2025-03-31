@@ -23,19 +23,27 @@ export default function RootLayout({
   const pathname = usePathname(); // Get the current route
 
   const isLandingPage = pathname === "/"; // Check if the current route is the landing page
+  // Added check for login/register pages explicitly if they should not have sidebar
+  const isAuthPage = pathname === "/" || pathname === "/register"; // Adjust if register path is different
   const doctorPage = pathname.includes("/doctor"); // Check if the current route is the doctor page
+
+  // Determine if sidebar should be shown
+  const showSidebar = !isAuthPage && !doctorPage;
+
 
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/* Ensure the outer container is also flex if needed, but body usually suffices */}
         <div className="flex">
           {/* Conditionally render the Sidebar */}
-          {!isLandingPage && !doctorPage && <Sidebar />}
+          {showSidebar && <Sidebar />}
 
           {/* Main Content */}
-          <div className={`flex-1 ${isLandingPage || doctorPage ? "bg-white" : "bg-gray"}`}>
+          {/* --- Added h-screen overflow-y-auto --- */}
+          <div className={`flex-1 ${showSidebar ? "bg-gray-50" : "bg-white"} h-screen overflow-y-auto`}>
             {children}
           </div>
         </div>

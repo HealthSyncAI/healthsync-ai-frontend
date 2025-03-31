@@ -74,15 +74,19 @@ export function LoginForm() {
   // Handler for radio button changes
   const handleRoleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedRole(event.target.value as UserRole);
+    setError(null); // Clear error on role change
   };
 
   return (
-    <Card className="max-w-md mx-auto">
+    <Card className="max-w-md mx-auto"> {/* Consider adding overflow-hidden if clipping is preferred */}
       <form onSubmit={onSubmit}>
-        <CardContent className="space-y-4">
+        {/* Add consistent padding top, default Card p is usually 6 */}
+        <CardContent className="space-y-4 pt-6">
           {/* Role Selection using HTML radio buttons */}
+          {/* Removed pt-4 from here, rely on CardContent padding and space-y */}
           <div className="space-y-2">
             <Label>Login As</Label>
+            {/* Added pt-1 for minor spacing below label */}
             <div className="flex space-x-4 pt-1">
               <div className="flex items-center space-x-2">
                 <input
@@ -128,16 +132,24 @@ export function LoginForm() {
           </div>
         </CardContent>
         <CardFooter>
+          {/* Removed text-white, rely on Button variant style */}
           <Button type="submit" className="w-full">
             Login as {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}
           </Button>
         </CardFooter>
       </form>
+
+      {/* === Alert Fix Start === */}
+      {/* Wrap Alert in a div with padding to control spacing within the Card */}
       {error && (
-        <Alert variant="destructive" className="mt-4 mx-6 mb-6">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <div className="px-6 pb-6 pt-0"> {/* Add padding: px-6 for horizontal, pb-6 for bottom */}
+            <Alert variant="destructive" className="mt-4"> {/* Remove mx-*, mb-* ; Keep or adjust mt-* */}
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+        </div>
       )}
+      {/* === Alert Fix End === */}
+
     </Card>
   )
 }
