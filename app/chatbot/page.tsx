@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import Loading from "@/components/Loading";
 import { useRouter } from "next/navigation"; // Import useRouter
 
+// --- Keep interface definitions ---
 interface Chat {
   id: number;
   input_text: string;
@@ -32,6 +33,7 @@ interface Doctor {
   bio: string;
   rating: number;
 }
+// --- End interfaces ---
 
 export default function Chatbot() {
   const initialMessage = {
@@ -58,55 +60,107 @@ export default function Chatbot() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   const router = useRouter();
-  const token = localStorage.getItem("auth_token") || "";
-
+  // --- State variables for token and firstName ---
+  const [token, setToken] = useState<string | null>(null); // Initialize as null
   const [firstName, setFirstName] = useState("");
+  // --- ---
 
+  // Function to handle unauthorized access
+  const handleUnauthorized = () => {
+      alert("Your session has expired or is invalid. Please log in again.");
+      // Only try to remove if localStorage exists (client-side)
+      if (typeof window !== 'undefined') {
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("username");
+      }
+      setToken(null);
+      setFirstName("");
+      router.push("/");
+  };
+
+  // Moved localStorage access here
   useEffect(() => {
-    fetchChatHistory();
+    // This code now runs only on the client
+    const storedToken = localStorage.getItem("auth_token");
     const storedFirstName = localStorage.getItem("username") || "";
-    setFirstName(storedFirstName);
-  }, []);
 
-  const fetchChatHistory = async () => {
+    if (storedToken) {
+        setToken(storedToken);
+        setFirstName(storedFirstName);
+        fetchChatHistory(storedToken); // Pass token directly
+    } else {
+        // Handle case where token is not found on initial load
+        console.warn("No auth token found. Redirecting to login.");
+        // Redirect if no token - prevents API calls without auth
+        handleUnauthorized();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array ensures this runs once on mount
+
+
+  // Modified fetchChatHistory to accept token
+  const fetchChatHistory = async (authToken: string) => {
+    // **Important:** Check if authToken is valid before fetching
+    if (!authToken) {
+        console.error("fetchChatHistory called without a token.");
+        // Optionally redirect or show error
+        // handleUnauthorized(); // Redirect if no token
+        return;
+    }
+    // Consider adding a loading state for history fetch
+    // setIsLoadingHistory(true);
     try {
       const response = await fetch("http://localhost:8000/api/chatbot/chats", {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`, // Use the passed token
         },
       });
 
       if (!response.ok) {
         if (response.status === 401) {
-          alert("Your session has expired. Please log in again.");
-          router.push("/"); // Navigate to the login page
-          return;
+          handleUnauthorized(); // Use centralized handler
+          return; // Stop execution
         }
-        throw new Error("Failed to fetch chat history");
+        throw new Error(`Failed to fetch chat history (${response.status})`);
       }
 
       const data: ChatHistory[] = await response.json();
-      setChatHistory(data.reverse());
+      setChatHistory(data.reverse()); // Keep reverse as in original
 
       if (data.length > 0) {
         const highestRoomNumber = Math.max(
           ...data.map((room) => room.room_number)
         );
         setCurrentRoomNumber(highestRoomNumber + 1);
-        setSelectedRoom(1);
+        // Set selectedRoom to the most recent room (first after reverse) if history exists
+        setSelectedRoom(data[0]?.room_number ?? null);
       } else {
-        setCurrentRoomNumber(1);
+        setCurrentRoomNumber(1); // Start at 1 if no history
         setSelectedRoom(null);
       }
     } catch (error) {
       console.error("Error fetching chat history:", error);
+      // Optionally set an error state to inform the user
+    } finally {
+       // setIsLoadingHistory(false);
     }
   };
 
   const handleSendMessage = async () => {
+    // --- Check for token from state ---
+    if (!token) {
+        console.error("Cannot send message: No auth token available.");
+        handleUnauthorized(); // Redirect if no token
+        return;
+    }
+    // --- ---
+
     if (!input.trim()) return;
 
-    setMessages((prev) => [...prev, { sender: "user", message: input }]);
+    const userMessage = { sender: "user", message: input }; // Define user message object
+    setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input; // Capture input before clearing
+    setInput(""); // Clear input immediately
     setIsLoading(true);
 
     try {
@@ -116,10 +170,10 @@ export default function Chatbot() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, // Use token from state
           },
           body: JSON.stringify({
-            symptom_text: input,
+            symptom_text: currentInput, // Use captured input
             room_number: currentRoomNumber,
           }),
         }
@@ -127,11 +181,10 @@ export default function Chatbot() {
 
       if (!response.ok) {
         if (response.status === 401) {
-          alert("Your session has expired. Please log in again.");
-          router.push("/"); // Navigate to the login page
-          return;
+          handleUnauthorized();
+          return; // Stop execution
         }
-        throw new Error("Failed to fetch response from the server");
+        throw new Error(`Failed to fetch response from the server (${response.status})`);
       }
 
       const data = await response.json();
@@ -143,105 +196,159 @@ export default function Chatbot() {
         },
       ]);
       setTriageAdvice(data.triage_advice || null);
+
+      // Refresh history if a message was potentially added to a new room
+      // This logic might need refinement depending on exactly when you want history updated
+      const roomExists = chatHistory.some(room => room.room_number === currentRoomNumber);
+      if (!roomExists && token) {
+          fetchChatHistory(token); // Refetch to include the new room
+      }
+
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error sending message:", error);
       setMessages((prev) => [
         ...prev,
-        { sender: "bot", message: "Something went wrong. Please try again." },
+        { sender: "bot", message: `Something went wrong. ${error instanceof Error ? error.message : 'Please try again.'}` },
       ]);
     } finally {
       setIsLoading(false);
     }
 
-    setInput("");
+    // Input is already cleared above
   };
 
   const handleNewChat = () => {
-    const newRoomNumber = (currentRoomNumber || 0) + 1;
+    // Determine the next room number based on existing history
+    const newRoomNumber = chatHistory.length > 0
+        ? Math.max(...chatHistory.map(room => room.room_number)) + 1
+        : 1; // Start at 1 if no history exists
+
     setCurrentRoomNumber(newRoomNumber);
     setMessages([initialMessage]);
     setInput("");
     setIsLoading(false);
     setTriageAdvice(null);
-
-    if (section !== "chatbot") {
-      setSection("chatbot");
-    }
+    setIsScheduling(false); // Close booking if open
+    setSection("chatbot"); // Switch to chatbot view
+    setSelectedRoom(null); // Ensure no history room is selected
   };
 
+
   const handleConfirmAppointment = async () => {
+    // --- Check for token from state ---
+    if (!token) {
+      console.error("Cannot confirm appointment: No auth token available.");
+      handleUnauthorized(); // Redirect if no token
+      return;
+    }
+    // --- ---
+
     if (!selectedDoctor || !selectedDate || !selectedTime) {
       alert("Please select a doctor, date, and time for the appointment.");
       return;
     }
 
+    // --- Keep original date/time parsing logic ---
     const year = parseInt(selectedDate.split("-")[2]);
     const month = parseInt(selectedDate.split("-")[1]) - 1; // Month is 0-indexed
     const day = parseInt(selectedDate.split("-")[0]);
-    const hour = parseInt(selectedTime.split(":")[0]);
+    let hour = parseInt(selectedTime.split(":")[0]);
     const minute = parseInt(selectedTime.split(":")[1].slice(0, 2));
-    const ampm = selectedTime.slice(-2);
-    const adjustedHour = ampm === "pm" && hour !== 12 ? hour + 12 : ampm === "am" && hour === 12 ? 0 : hour;
+    const ampm = selectedTime.slice(-2).toLowerCase(); // Ensure lowercase comparison
 
-    const startTime = new Date(year, month, day, adjustedHour, minute);
+    if (ampm === "pm" && hour !== 12) {
+      hour += 12;
+    } else if (ampm === "am" && hour === 12) { // Handle midnight case (12:xx AM -> 00:xx)
+        hour = 0;
+    }
+
+     // Basic validation for parsed components
+     if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hour) || isNaN(minute)) {
+         alert("Invalid date or time format selected. Please re-select.");
+         return;
+     }
+
+    // Consider creating date in UTC to avoid timezone issues if backend expects UTC
+    // const startTime = new Date(Date.UTC(year, month, day, hour, minute));
+    // Or keep local time if backend handles it:
+    const startTime = new Date(year, month, day, hour, minute);
+
+    // Check if Date object is valid
+    if (isNaN(startTime.getTime())) {
+        alert("Could not create a valid appointment date/time. Please check your selection.");
+        return;
+    }
+
     const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // Assuming 1 hour appointment
+    // --- End date/time logic ---
 
     const appointmentData = {
       doctor_id: selectedDoctor.id,
-      start_time: startTime.toISOString(),
-      end_time: endTime.toISOString(),
+      start_time: startTime.toISOString(), // Send ISO string format
+      end_time: endTime.toISOString(),     // Send ISO string format
       telemedicine_url: "https://example.com/meeting/abc", // Replace with actual URL logic
     };
 
+    setIsConfirming(true);
     try {
-      setIsConfirming(true);
       const response = await fetch("http://localhost:8000/api/appointment", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, // Use token from state
         },
         body: JSON.stringify(appointmentData),
       });
 
       if (!response.ok) {
         if (response.status === 401) {
-          alert("Your session has expired. Please log in again.");
-          router.push("/"); // Navigate to the login page
-          return;
+          handleUnauthorized();
+          return; // Stop execution
         }
-        const errorData = await response.json();
-        console.error("Error creating appointment:", errorData);
-        alert(`Failed to create appointment: ${errorData.message || "Unknown error"}`);
-        return;
+        // Try to get error details from response body
+        let errorDetails = "Unknown server error";
+        try {
+            const errorData = await response.json();
+            errorDetails = errorData.detail || errorData.message || JSON.stringify(errorData);
+        } catch (e) {
+            errorDetails = `HTTP error ${response.status} ${e}`;
+        }
+        console.error("Error creating appointment:", errorDetails);
+        alert(`Failed to create appointment: ${errorDetails}`);
+        return; // Keep booking form open potentially?
       }
 
+      // --- Success ---
       console.log("Appointment created successfully!");
       alert("Appointment created successfully!");
       setIsScheduling(false); // Hide the booking component after confirmation
-      setSelectedDoctor(null); // Clear selected doctor
-      setSelectedDate(null); // Clear selected date
-      setSelectedTime(null); // Clear selected time
+      // Reset selection state
+      setSelectedDoctor(null);
+      setSelectedDate(null);
+      setSelectedTime(null);
+      setTriageAdvice(null); // Clear advice that might have triggered scheduling
+      // --- ---
     } catch (error) {
       console.error("Error creating appointment:", error);
-      alert("Failed to create appointment. Please try again.");
+      alert(`Failed to create appointment. ${error instanceof Error ? error.message : 'Please try again.'}`);
     } finally {
       setIsConfirming(false);
     }
   };
 
+  // --- Keep original handlers ---
   const handleDoctorSelected = (doctor: Doctor) => {
     setSelectedDoctor(doctor);
   };
-
   const handleDateSelected = (date: string) => {
     setSelectedDate(date);
   };
-
   const handleTimeSelected = (time: string) => {
     setSelectedTime(time);
   };
+  // --- ---
 
+  // --- Keep original renderChatContent ---
   const renderChatContent = () => {
     if (section === "history") {
       const selectedRoomChats = chatHistory.find(
@@ -249,11 +356,11 @@ export default function Chatbot() {
       )?.chats;
 
       return (
-        <div className="flex flex-col gap-4 w-full h-full overflow-y-auto">
+        <div className="flex flex-col gap-4 w-full h-full overflow-y-auto p-1"> {/* Added minimal padding */}
           {chatHistory.length > 0 ? (
             selectedRoomChats && selectedRoomChats.length > 0 ? (
               selectedRoomChats
-                .sort((a, b) => a.id - b.id)
+                .sort((a, b) => a.id - b.id) // Ensure sorting by ID (chronological)
                 .map((chat) => (
                   <div key={chat.id} className="flex flex-col gap-2">
                     <div className="flex justify-end">
@@ -262,69 +369,91 @@ export default function Chatbot() {
                     <div className="flex justify-start">
                       <Chat sender="bot" message={chat.model_response} />
                     </div>
+                    {/* Optional: Display historical triage advice */}
+                    {/* {chat.triage_advice && <div className="text-xs text-gray-500 self-start ml-2">Advice: {chat.triage_advice}</div>} */}
                   </div>
                 ))
             ) : (
-              <p className="text-gray-500">No messages in this room.</p>
+              <p className="text-gray-500 text-center mt-4">
+                {selectedRoom ? `No messages in Room ${selectedRoom}.` : "Select a room to view its history."}
+              </p>
             )
           ) : (
-            <p className="text-gray-500">No chat history available.</p>
+            <p className="text-gray-500 text-center mt-4">No chat history available.</p>
           )}
         </div>
       );
     }
 
+    // --- Render current chat ---
     return (
       <>
-        <div className="flex flex-col gap-4 w-full h-full overflow-y-auto">
+        {/* Message display area */}
+        <div className="flex flex-col gap-4 w-full h-full overflow-y-auto p-1"> {/* Added minimal padding */}
           {messages.map((msg, index) => (
-            <Chat key={index} sender={msg.sender} message={msg.message} />
+            // Render user/bot messages using Chat component
+             <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <Chat sender={msg.sender} message={msg.message} />
+             </div>
           ))}
-          {isLoading && <Loading />}
+          {/* Loading indicator */}
+          {isLoading && <div className="self-center"><Loading /></div>}
+
+          {/* Triage Advice (only show if not currently scheduling) */}
+           {triageAdvice === "schedule_appointment" && !isScheduling && (
+             <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-sm">
+               We recommend you see the doctor.{" "}
+               <button
+                 className="text-blue-600 underline font-semibold hover:text-blue-800"
+                 onClick={() => setIsScheduling(true)} // Show the Appointment component
+                 disabled={isConfirming} // Disable while an appointment confirmation is in progress
+               >
+                 Schedule an appointment now!
+               </button>
+             </div>
+           )}
+            {/* Show other triage advice types if needed */}
+            {/* {triageAdvice && triageAdvice !== "schedule_appointment" && ( ... )} */}
         </div>
-        {triageAdvice === "schedule_appointment" && (
-          <div className="mt-4 p-4 bg-red-100 border border-red-500 text-red-700 rounded-md">
-            We recommend you to see the doctor.{" "}
-            <button
-              className="text-blue-500 underline"
-              onClick={() => setIsScheduling(true)} // Show the Appointment component
-            >
-              Schedule an appointment now!
-            </button>
-          </div>
-        )}
-        <div className="flex flex-row gap-4 w-full h-[48px] mt-auto">
+
+        {/* Input area */}
+        <div className="flex flex-row gap-4 w-full h-[48px] mt-auto pt-2 border-t border-black/10"> {/* Added pt-2 and border */}
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {if (e.key === 'Enter' && !isLoading && !isConfirming) handleSendMessage()}} // Send on Enter
             type="text"
             placeholder="Type a message"
-            className="w-full h-full border-[1px] text-black bg-gray border-[#ABAEC2] rounded-[8px] px-4"
-            disabled={isLoading || isConfirming}
+            className="flex-grow h-full border border-[#ABAEC2] text-black bg-white rounded-lg px-4 focus:outline-none focus:ring-1 focus:ring-blue-500" // Adjusted focus style
+            disabled={isLoading || isConfirming} // Disable input while loading/confirming
           />
           <button
-            className="w-[48px] h-full bg-gray text-white rounded-[8px] p-2 border-[1px] border-[#ABAEC2]"
+            className="w-[48px] h-full bg-blue-600 text-white rounded-lg p-2 flex items-center justify-center hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50" // Use primary color, adjust styling
             onClick={handleSendMessage}
-            disabled={isLoading || isConfirming}
+            disabled={isLoading || isConfirming || !input.trim()} // Also disable if input is empty
           >
             <Image
-              src="/images/Send.png"
+              src="/images/Send.png" // Ensure this path is correct
               width={20}
               height={20}
               alt="send"
-              className="w-full"
+              // className="w-full" // Removed w-full if image has intrinsic size
             />
           </button>
         </div>
       </>
     );
   };
+  // --- End renderChatContent ---
 
+
+  // --- Return Original JSX Structure ---
   return (
     <div className="flex flex-col justify-start min-h-screen font-[family-name:var(--font-geist-sans)] p-6 gap-4">
       <div className="flex flex-row items-center justify-between h-[78px] w-full">
         <div className="flex flex-col">
-          <p className="text-[20px] text-[#747474]">Hi, {firstName}!</p>
+          {/* Use firstName from state */}
+          <p className="text-[20px] text-[#747474]">Hi, {firstName || "there"}!</p>
           <p className="text-[32px] font-bold text-[#232323]">Online Consult</p>
         </div>
       </div>
@@ -338,6 +467,10 @@ export default function Chatbot() {
             onDoctorSelected={handleDoctorSelected}
             onDateSelected={handleDateSelected}
             onTimeSelected={handleTimeSelected}
+             // Pass other necessary props if BookingBox needs them
+             // e.g., token={token} if it fetches doctors
+             // onConfirm={handleConfirmAppointment} // Pass the confirm handler
+             // isConfirming={isConfirming} // Pass loading state
           /> // Render Appointment component
         ) : (
           <>
@@ -353,24 +486,24 @@ export default function Chatbot() {
             </div>
 
             {/* Tabs and Select Room */}
-            <div className="flex flex-row justify-start items-start gap-8">
+            <div className="flex flex-row justify-start items-start gap-8 pt-4"> {/* Added padding top */}
               {/* Section Tabs */}
               <div className="flex flex-col">
                 <div className="text-sm font-medium text-black mb-2">
                   Section
                 </div>
                 <div
-                  className="border border-[#ABAEC2] rounded-[8px] p-1 w-[218px]"
+                  className="inline-flex border border-[#ABAEC2] rounded-lg p-1" // Use inline-flex
                   role="tablist"
                 >
                   <button
                     role="tab"
                     aria-selected={section === "chatbot"}
                     onClick={() => setSection("chatbot")}
-                    className={`px-4 py-2 text-[#747474] rounded-[8px] cursor-pointer ${
+                    className={`px-4 py-2 text-sm rounded-md transition-colors ${ // Adjusted padding/text size
                       section === "chatbot"
-                        ? "bg-primary text-white"
-                        : "bg-white text-[#747474]"
+                        ? "bg-blue-600 text-white shadow-sm" // Use primary color
+                        : "bg-white text-[#747474] hover:bg-gray-100"
                     }`}
                   >
                     Chatbot
@@ -379,11 +512,12 @@ export default function Chatbot() {
                     role="tab"
                     aria-selected={section === "history"}
                     onClick={() => setSection("history")}
-                    className={`px-4 py-2 text-[#747474] rounded-[8px] cursor-pointer ${
+                    className={`px-4 py-2 text-sm rounded-md transition-colors ${ // Adjusted padding/text size
                       section === "history"
-                        ? "bg-primary text-white"
-                        : "bg-white text-[#747474]"
+                        ? "bg-blue-600 text-white shadow-sm" // Use primary color
+                        : "bg-white text-[#747474] hover:bg-gray-100"
                     }`}
+                     disabled={chatHistory.length === 0} // Disable if no history
                   >
                     See history
                   </button>
@@ -393,15 +527,21 @@ export default function Chatbot() {
               {/* Select Room Dropdown */}
               {section === "history" && chatHistory.length > 0 && (
                 <div className="flex flex-col">
-                  <div className="text-sm font-medium text-black mb-2">
+                  <label htmlFor="room-select" className="text-sm font-medium text-black mb-2"> {/* Use label */}
                     Chat room
-                  </div>
+                  </label>
                   <select
                     id="room-select"
-                    value={selectedRoom || ""}
-                    onChange={(e) => setSelectedRoom(Number(e.target.value))}
-                    className="w-[250px] h-[50px] block p-2 border border-[#ABAEC2] text-[#747474] rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                    value={selectedRoom ?? ""} // Handle null value for controlled component
+                    onChange={(e) => {
+                        const val = e.target.value;
+                        setSelectedRoom(val ? Number(val) : null); // Handle empty selection if needed
+                    }}
+                    // Adjusted styling for consistency
+                    className="w-[250px] h-[42px] border border-[#ABAEC2] text-[#747474] rounded-lg shadow-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm bg-white"
                   >
+                     {/* Optional: Add a default placeholder option */}
+                     {/* <option value="" disabled>Select a room</option> */}
                     {chatHistory.map((room) => (
                       <option key={room.room_number} value={room.room_number}>
                         Room {room.room_number}
@@ -412,41 +552,55 @@ export default function Chatbot() {
               )}
             </div>
 
-            {/* Chat Content */}
-            <div className="flex flex-col gap-4 p-4 w-full h-[524px] mt-4 bg-gray rounded-[12px] border-[1px] border-black/10">
-              {renderChatContent()}
+            {/* Chat Content Wrapper */}
+            <div className="flex flex-col flex-grow gap-4 p-4 mt-4 bg-gray-100 rounded-lg border border-black/10 min-h-[450px] overflow-hidden"> {/* Adjusted bg, min-height, border */}
+              {/* Render chat content / history */}
+              {token === null && section === 'chatbot' && !isLoading ? (
+                  <p className="text-center text-gray-500 mt-10">Initializing chat...</p>
+              ) : (
+                  renderChatContent()
+              )}
             </div>
           </>
         )}
       </div>
 
-      {/* Footer Buttons */}
-      <div className="flex flex-row gap-6 w-[451px] h-[48px] ml-auto mt-6">
-        {!isScheduling && (
-          <button
-            className="w-full h-full text-[#232323] border-[1px] border-[#ABAEC2] rounded-[8px]"
-            onClick={handleNewChat}
-          >
-            New Chat
-          </button>
-        )}
-        {isScheduling ? (
-          <button
-            className="w-[215px] h-full bg-primary text-white rounded-[8px] ml-auto"
-            onClick={handleConfirmAppointment}
-            disabled={isConfirming}
-          >
-            Confirm
-          </button>
-        ) : (
-          <button
-            className="w-full h-full bg-primary text-white rounded-[8px]"
-            onClick={() => setIsScheduling(true)} // Toggle BookingBox
-          >
-            Schedule Appointment
-          </button>
-        )}
-      </div>
+       {/* Footer Buttons outside the white box */}
+        <div className="flex flex-row justify-end gap-6 w-full mt-4"> {/* Use justify-end */}
+           {/* New Chat Button - Always available? Or only in chatbot mode? */}
+           {/* Consider placement based on UX */}
+           {!isScheduling && (
+              <button
+                className="px-5 py-2 h-[48px] text-[#232323] border border-[#ABAEC2] rounded-lg font-medium bg-white hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-400" // Adjusted styling
+                onClick={handleNewChat}
+                disabled={isLoading || isConfirming} // Disable while loading state is active
+              >
+                New Chat
+              </button>
+           )}
+
+          {isScheduling ? (
+            // Confirm Button (only when scheduling)
+            <button
+              className="px-5 py-2 h-[48px] bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50" // Use primary color
+              onClick={handleConfirmAppointment}
+              // Disable if confirming or if required fields aren't selected
+              disabled={isConfirming || !selectedDoctor || !selectedDate || !selectedTime}
+            >
+              {isConfirming ? <Loading /> : 'Confirm'} {/* Show loading inside button */}
+            </button>
+          ) : (
+             // Schedule Appointment Button (only when not scheduling)
+             // Consider only showing if triageAdvice recommends it, or always allow scheduling
+            <button
+              className="px-5 py-2 h-[48px] bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50" // Use primary color
+              onClick={() => setIsScheduling(true)} // Toggle BookingBox
+              disabled={isLoading || isConfirming} // Disable if chatbot is busy
+            >
+              Schedule Appointment
+            </button>
+          )}
+        </div>
     </div>
   );
 }

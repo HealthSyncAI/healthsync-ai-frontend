@@ -4,7 +4,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { LoginForm } from "@/components/login-form";
-import RegisterForm from "@/components/register-form";
+import { RegisterForm } from "@/components/register-form";
 
 export default function Home() {
   const [showLoginForm, setShowLoginForm] = useState(true);
