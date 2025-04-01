@@ -133,7 +133,7 @@ export function LoginForm() {
         </CardContent>
         <CardFooter>
           {/* Removed text-white, rely on Button variant style */}
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full text-white">
             Login as {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}
           </Button>
         </CardFooter>

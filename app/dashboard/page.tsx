@@ -112,7 +112,7 @@ export default function PatientDashboard() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="container mx-auto py-8 px-4 bg-[#F5F5F5] h-full">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Health Dashboard</h1>
         <p className="text-muted-foreground">View health information at a glance</p>

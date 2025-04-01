@@ -404,7 +404,6 @@ export default function Chatbot() {
              <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-sm">
                We recommend you see the doctor.{" "}
                <button
-                 className="text-blue-600 underline font-semibold hover:text-blue-800"
                  onClick={() => setIsScheduling(true)} // Show the Appointment component
                  disabled={isConfirming} // Disable while an appointment confirmation is in progress
                >
@@ -412,8 +411,6 @@ export default function Chatbot() {
                </button>
              </div>
            )}
-            {/* Show other triage advice types if needed */}
-            {/* {triageAdvice && triageAdvice !== "schedule_appointment" && ( ... )} */}
         </div>
 
         {/* Input area */}
@@ -428,7 +425,7 @@ export default function Chatbot() {
             disabled={isLoading || isConfirming} // Disable input while loading/confirming
           />
           <button
-            className="w-[48px] h-full bg-blue-600 text-white rounded-lg p-2 flex items-center justify-center hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50" // Use primary color, adjust styling
+            className="w-[48px] h-full bg-primary text-white rounded-lg p-2 flex items-center justify-center hover:primary focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50" // Use primary color, adjust styling
             onClick={handleSendMessage}
             disabled={isLoading || isConfirming || !input.trim()} // Also disable if input is empty
           >
@@ -449,7 +446,7 @@ export default function Chatbot() {
 
   // --- Return Original JSX Structure ---
   return (
-    <div className="flex flex-col justify-start min-h-screen font-[family-name:var(--font-geist-sans)] p-6 gap-4">
+    <div className="flex flex-col justify-start min-h-screen font-[family-name:var(--font-geist-sans)] p-6 gap-4 bg-[#F5F5F5]">
       <div className="flex flex-row items-center justify-between h-[78px] w-full">
         <div className="flex flex-col">
           {/* Use firstName from state */}
@@ -502,7 +499,7 @@ export default function Chatbot() {
                     onClick={() => setSection("chatbot")}
                     className={`px-4 py-2 text-sm rounded-md transition-colors ${ // Adjusted padding/text size
                       section === "chatbot"
-                        ? "bg-blue-600 text-white shadow-sm" // Use primary color
+                        ? "bg-primary text-white shadow-sm" // Use primary color
                         : "bg-white text-[#747474] hover:bg-gray-100"
                     }`}
                   >
@@ -514,7 +511,7 @@ export default function Chatbot() {
                     onClick={() => setSection("history")}
                     className={`px-4 py-2 text-sm rounded-md transition-colors ${ // Adjusted padding/text size
                       section === "history"
-                        ? "bg-blue-600 text-white shadow-sm" // Use primary color
+                        ? "bg-primary text-white shadow-sm" // Use primary color
                         : "bg-white text-[#747474] hover:bg-gray-100"
                     }`}
                      disabled={chatHistory.length === 0} // Disable if no history
@@ -553,7 +550,7 @@ export default function Chatbot() {
             </div>
 
             {/* Chat Content Wrapper */}
-            <div className="flex flex-col flex-grow gap-4 p-4 mt-4 bg-gray-100 rounded-lg border border-black/10 min-h-[450px] overflow-hidden"> {/* Adjusted bg, min-height, border */}
+            <div className="flex flex-col flex-grow gap-4 p-4 mt-4 bg-[#F5F5F5] rounded-lg border border-black/10 min-h-[450px] overflow-hidden"> {/* Adjusted bg, min-height, border */}
               {/* Render chat content / history */}
               {token === null && section === 'chatbot' && !isLoading ? (
                   <p className="text-center text-gray-500 mt-10">Initializing chat...</p>
@@ -566,9 +563,8 @@ export default function Chatbot() {
       </div>
 
        {/* Footer Buttons outside the white box */}
-        <div className="flex flex-row justify-end gap-6 w-full mt-4"> {/* Use justify-end */}
-           {/* New Chat Button - Always available? Or only in chatbot mode? */}
-           {/* Consider placement based on UX */}
+       <div className="flex flex-row justify-end gap-6 w-full mt-4 items-center"> {/* Use justify-end and items-center to vertically align */}
+           {/* New Chat Button */}
            {!isScheduling && (
               <button
                 className="px-5 py-2 h-[48px] text-[#232323] border border-[#ABAEC2] rounded-lg font-medium bg-white hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-400" // Adjusted styling
@@ -579,27 +575,36 @@ export default function Chatbot() {
               </button>
            )}
 
-          {isScheduling ? (
-            // Confirm Button (only when scheduling)
-            <button
-              className="px-5 py-2 h-[48px] bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50" // Use primary color
-              onClick={handleConfirmAppointment}
-              // Disable if confirming or if required fields aren't selected
-              disabled={isConfirming || !selectedDoctor || !selectedDate || !selectedTime}
-            >
-              {isConfirming ? <Loading /> : 'Confirm'} {/* Show loading inside button */}
-            </button>
-          ) : (
-             // Schedule Appointment Button (only when not scheduling)
-             // Consider only showing if triageAdvice recommends it, or always allow scheduling
-            <button
-              className="px-5 py-2 h-[48px] bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50" // Use primary color
-              onClick={() => setIsScheduling(true)} // Toggle BookingBox
-              disabled={isLoading || isConfirming} // Disable if chatbot is busy
-            >
-              Schedule Appointment
-            </button>
-          )}
+           {/* Conditional rendering for Confirm Button space */}
+           {isScheduling && (
+              // This div reserves space and aligns the content (button or spinner)
+              <div className="h-[48px] flex items-center justify-center">
+                {isConfirming ? (
+                  // Render only the Loading component when confirming
+                  <Loading />
+                ) : (
+                  // Render the Button when not confirming
+                  <button
+                    className="flex items-center justify-center px-5 py-2 h-full bg-primary text-white rounded-lg font-medium hover:bg-primary focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50" // Ensure button takes full height of wrapper
+                    onClick={handleConfirmAppointment}
+                    disabled={!selectedDoctor || !selectedDate || !selectedTime} // Disable only based on selections, not isConfirming
+                  >
+                    Confirm
+                  </button>
+                )}
+              </div>
+           )}
+
+           {/* Schedule Appointment Button (conditionally rendered based on isScheduling) */}
+           {!isScheduling && (
+             <button
+               className="px-5 py-2 h-[48px] bg-primary text-white rounded-lg font-medium hover:bg-primary focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50" // Use primary color
+               onClick={() => setIsScheduling(true)} // Toggle BookingBox
+               disabled={isLoading || isConfirming} // Disable if chatbot is busy
+             >
+               Schedule Appointment
+             </button>
+           )}
         </div>
     </div>
   );
