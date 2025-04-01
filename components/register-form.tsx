@@ -321,7 +321,7 @@ export function RegisterForm() {
         </CardContent>
         <CardFooter>
           {/* Assuming default Button variant handles text color */}
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full text-white">
             Register as {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}
           </Button>
         </CardFooter>

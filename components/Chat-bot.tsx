@@ -26,7 +26,7 @@ export default function Chatbot({ sender, message }: ChatbotProps) {
             <a 
               href={href}
               className={`underline hover:opacity-80 ${
-                sender === "bot" ? "text-blue-600" : "text-white"
+                sender === "bot" ? "text-primary" : "text-white"
               }`} 
             >
               {children}

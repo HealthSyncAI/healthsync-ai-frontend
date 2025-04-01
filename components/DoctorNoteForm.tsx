@@ -202,7 +202,7 @@ export default function DoctorNoteForm({ initialNote, onSubmit }: DoctorNoteForm
             <button
               type="button"
               onClick={handleAddSymptom}
-              className="bg-primary hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
+              className="bg-primary hover:bg-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
             >
               Add Symptom
             </button>
@@ -259,7 +259,7 @@ export default function DoctorNoteForm({ initialNote, onSubmit }: DoctorNoteForm
             <button
               type="button"
               onClick={handleAddDiagnosis}
-              className="bg-primary hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
+              className="bg-primary hover:bg-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
             >
               Add Diagnosis
             </button>
@@ -316,7 +316,7 @@ export default function DoctorNoteForm({ initialNote, onSubmit }: DoctorNoteForm
             <button
               type="button"
               onClick={handleAddTreatmentPlan}
-              className="bg-primary hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
+              className="bg-primary hover:bg-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
             >
               Add Treatment Plan
             </button>
@@ -396,7 +396,7 @@ export default function DoctorNoteForm({ initialNote, onSubmit }: DoctorNoteForm
             <button
               type="button"
               onClick={handleAddMedication}
-              className="bg-primary hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
+              className="bg-primary hover:bg-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
             >
               Add Medication
             </button>
@@ -405,7 +405,7 @@ export default function DoctorNoteForm({ initialNote, onSubmit }: DoctorNoteForm
           <div className="col-span-full">
             <button
               type="submit"
-              className="bg-primary hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              className="bg-primary hover:bg-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             >
               Save Doctor Note
             </button>
