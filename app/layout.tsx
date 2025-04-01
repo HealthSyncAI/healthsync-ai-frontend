@@ -21,8 +21,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname(); // Get the current route
-
-  const isLandingPage = pathname === "/"; // Check if the current route is the landing page
   // Added check for login/register pages explicitly if they should not have sidebar
   const isAuthPage = pathname === "/" || pathname === "/register"; // Adjust if register path is different
   const doctorPage = pathname.includes("/doctor"); // Check if the current route is the doctor page

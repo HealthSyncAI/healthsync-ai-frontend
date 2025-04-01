@@ -2,10 +2,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useState } from "react";
 import { LoginForm } from "@/components/login-form";
-import RegisterForm from "@/components/register-form";
+import { RegisterForm } from "@/components/register-form";
 
 export default function Home() {
   const [showLoginForm, setShowLoginForm] = useState(true);

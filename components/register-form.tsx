@@ -1,51 +1,67 @@
 "use client"
 
-import React, { useState, useRef, useEffect } from "react" // Re-added useRef, useEffect
+import React, { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-// No Checkbox import needed
 
 // Define the possible roles
 type UserRole = 'patient' | 'doctor';
 
-export default function RegisterForm() {
+// --- Define Interfaces for Registration Payloads ---
+interface BaseUserData {
+    username: string;
+    email: string;
+    password?: string; // Password included in submission
+    first_name: string;
+    last_name: string;
+}
+
+interface PatientRegistrationData extends BaseUserData {
+    // role?: "patient"; // Only add if your API explicitly expects role:"patient"
+    date_of_birth: string;
+    gender: string;
+    height_cm: number;
+    weight_kg: number;
+    blood_type: string;
+    allergies?: string;       // Optional fields
+    existing_conditions?: string; // Optional fields
+}
+
+interface DoctorRegistrationData extends BaseUserData {
+    role: "doctor"; // Role is required for doctors
+    specialization: string;
+    qualifications: string;
+    is_available: boolean;
+}
+// --- End Interface Definitions ---
+
+
+// Changed export to named export to potentially align with LoginForm if needed
+export function RegisterForm() {
   const [error, setError] = useState<string | null>(null)
   const [selectedRole, setSelectedRole] = useState<UserRole>('patient');
   const router = useRouter()
 
-  // --- Re-added scrolling logic ---
-  const contentRef = useRef<HTMLDivElement>(null); // Ref for the inner content div
-  const [isScrollable, setIsScrollable] = useState(false); // State to track if content overflows
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [isScrollable, setIsScrollable] = useState(false);
 
   useEffect(() => {
     const checkScrollable = () => {
       if (contentRef.current) {
-        // Check if the actual height of the content inside the ref'd div
-        // is greater than the threshold (e.g., 900px)
-        const shouldScroll = contentRef.current.scrollHeight > 900; // Using original threshold
-        // console.log('Scroll Height:', contentRef.current.scrollHeight, 'Should Scroll:', shouldScroll);
+        const shouldScroll = contentRef.current.scrollHeight > 900;
         setIsScrollable(shouldScroll);
       } else {
         setIsScrollable(false);
       }
     };
-
-    // Run check initially and whenever the role changes (causing content height change)
     checkScrollable();
-
-    // Also check on window resize
     window.addEventListener('resize', checkScrollable);
-
-    // Cleanup listener on component unmount or before effect re-runs
     return () => window.removeEventListener('resize', checkScrollable);
-
-  }, [selectedRole]); // *** Added selectedRole to dependency array ***
-
-  // --- End scrolling logic ---
+  }, [selectedRole]);
 
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -53,17 +69,19 @@ export default function RegisterForm() {
     setError(null)
 
     const formData = new FormData(event.currentTarget)
-    let data: any;
+    // --- Use the Type Union instead of any ---
+    let data: PatientRegistrationData | DoctorRegistrationData;
 
     const baseData = {
       username: formData.get("username") as string,
       email: formData.get("email") as string,
-      password: formData.get("password") as string,
+      password: formData.get("password") as string, // Password needed for submission
       first_name: formData.get("first_name") as string,
       last_name: formData.get("last_name") as string,
     };
 
     if (selectedRole === 'doctor') {
+        // TypeScript now knows this should conform to DoctorRegistrationData
       data = {
         ...baseData,
         role: "doctor",
@@ -72,15 +90,17 @@ export default function RegisterForm() {
         is_available: formData.get("is_available") === "true",
       };
     } else { // Patient role
+        // TypeScript now knows this should conform to PatientRegistrationData
       data = {
         ...baseData,
+        // role: "patient", // Only add if needed
         date_of_birth: formData.get("date_of_birth") as string,
         gender: formData.get("gender") as string,
         height_cm: parseFloat(formData.get("height_cm") as string || "0"),
         weight_kg: parseFloat(formData.get("weight_kg") as string || "0"),
         blood_type: formData.get("blood_type") as string,
-        allergies: formData.get("allergies") as string,
-        existing_conditions: formData.get("existing_conditions") as string,
+        allergies: formData.get("allergies") as string || undefined, // Handle optional empty string
+        existing_conditions: formData.get("existing_conditions") as string || undefined, // Handle optional empty string
       };
     }
 
@@ -92,17 +112,19 @@ export default function RegisterForm() {
             headers: {
             "Content-Type": "application/json",
             },
-            body: JSON.stringify(data),
+            body: JSON.stringify(data), // Data now has a specific type
         })
 
         console.log("Response Status:", response.status);
 
         if (response.ok) {
+            // ... (rest of the success logic remains the same)
             const responseData = await response.json();
             console.log("Registration successful:", responseData);
 
             const access_token = responseData?.access_token;
             const token_type = responseData?.token_type;
+            // data.username will be correctly typed here now
             const username = data.username;
 
             if (access_token && token_type && username) {
@@ -123,13 +145,15 @@ export default function RegisterForm() {
             }
 
         } else {
-            const errorData = await response.json();
+            // ... (error handling remains the same)
+             const errorData = await response.json();
             console.error("Registration Error data:", errorData);
             const message = errorData?.detail || errorData?.message || "An error occurred during registration";
             setError(typeof message === 'string' ? message : JSON.stringify(message));
         }
     } catch (error: unknown) {
-        console.error("Registration submission error:", error);
+        // ... (catch block remains the same)
+         console.error("Registration submission error:", error);
         if (error instanceof TypeError && error.message.includes('fetch')) {
              setError("Network error: Could not connect to the server.");
         } else if (error instanceof Error) {
@@ -145,27 +169,25 @@ export default function RegisterForm() {
     setError(null);
   };
 
+  // --- Return statement remains the same ---
   return (
     <Card className="max-w-md mx-auto">
       <form onSubmit={onSubmit}>
-        {/* Apply conditional styles to CardContent for scrolling */}
         <CardContent
             className="space-y-4"
             style={{
-                // Apply maxHeight and overflow only if isScrollable is true
-                maxHeight: isScrollable ? '580px' : 'none', // Using original maxHeight
+                maxHeight: isScrollable ? '580px' : 'none',
                 overflowY: isScrollable ? 'auto' : 'visible',
-                // Add padding-right if scrollbar is visible to prevent content overlap
-                paddingRight: isScrollable ? '1rem' : undefined, // Adjust value as needed
+                paddingRight: isScrollable ? '1rem' : undefined,
             }}
         >
-          {/* Inner div that holds all content and has the ref */}
           <div ref={contentRef} className="space-y-4">
              {/* Role Selection */}
              <div className="space-y-2">
                 <Label>Register As</Label>
                 <div className="flex space-x-4 pt-1">
-                <div className="flex items-center space-x-2">
+                  {/* ... radio buttons ... */}
+                   <div className="flex items-center space-x-2">
                     <input
                     type="radio"
                     id="role-patient-register"
@@ -197,7 +219,8 @@ export default function RegisterForm() {
             </div>
 
             {/* Common Fields */}
-            <div className="space-y-2">
+             {/* ... common fields ... */}
+              <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
                 <Input id="username" name="username" required />
             </div>
@@ -218,10 +241,12 @@ export default function RegisterForm() {
                 <Input id="last_name" name="last_name" required />
             </div>
 
+
             {/* Patient Specific Fields */}
             {selectedRole === 'patient' && (
                  <>
-                    <div className="space-y-2">
+                    {/* ... patient fields ... */}
+                     <div className="space-y-2">
                         <Label htmlFor="date_of_birth">Date of Birth</Label>
                         <Input id="date_of_birth" name="date_of_birth" type="date" required />
                     </div>
@@ -249,13 +274,14 @@ export default function RegisterForm() {
                         <Label htmlFor="existing_conditions">Existing Conditions (optional)</Label>
                         <Input id="existing_conditions" name="existing_conditions" />
                     </div>
-                </>
+                 </>
             )}
 
             {/* Doctor Specific Fields */}
             {selectedRole === 'doctor' && (
                 <>
-                    <div className="space-y-2">
+                    {/* ... doctor fields ... */}
+                     <div className="space-y-2">
                         <Label htmlFor="specialization">Specialization</Label>
                         <Input id="specialization" name="specialization" required />
                     </div>
@@ -263,10 +289,9 @@ export default function RegisterForm() {
                         <Label htmlFor="qualifications">Qualifications</Label>
                         <Input id="qualifications" name="qualifications" required />
                     </div>
-                    {/* Simple Radio Group for Availability */}
                     <div className="space-y-2 pt-2">
                         <Label>Currently Available?</Label>
-                        <div className="flex space-x-4 pt-1">
+                         <div className="flex space-x-4 pt-1">
                             <div className="flex items-center space-x-2">
                                 <input
                                     type="radio"
@@ -290,19 +315,18 @@ export default function RegisterForm() {
                             </div>
                         </div>
                     </div>
-                    {/* End Simple Radio Group */}
                 </>
             )}
            </div> {/* End of ref'd inner div */}
         </CardContent>
         <CardFooter>
-          <Button type="submit" className="w-full text-white">
+          {/* Assuming default Button variant handles text color */}
+          <Button type="submit" className="w-full">
             Register as {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}
           </Button>
         </CardFooter>
       </form>
       {error && (
-        // Place error outside the scrolling CardContent, but inside the Card
         <div className="px-6 pb-6">
             <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
