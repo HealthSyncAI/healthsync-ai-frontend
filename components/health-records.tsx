@@ -71,6 +71,7 @@ export default function HealthRecords() {
   const [doctors, setDoctors] = useState<Record<number, Doctor>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -94,7 +95,7 @@ export default function HealthRecords() {
         }
 
         // Fetch health records
-        const recordsResponse = await fetch(`http://localhost:8000/api/health-record/patient/${patientId}`, {
+        const recordsResponse = await fetch(`${apiUrl}/api/health-record/patient/${patientId}`, {
           headers,
         })
 
@@ -106,7 +107,7 @@ export default function HealthRecords() {
         setRecords(recordsData)
 
         // Fetch doctors data
-        const doctorsResponse = await fetch("http://localhost:8000/api/appointment/doctors", {
+        const doctorsResponse = await fetch(`${apiUrl}/api/appointment/doctors`, {
           headers,
         })
 
