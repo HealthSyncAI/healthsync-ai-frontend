@@ -20,7 +20,7 @@ export function LoginForm() {
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
-
+  
     const formData = new FormData(event.currentTarget)
     const loginData = {
         username: formData.get("username") as string,
@@ -29,42 +29,39 @@ export function LoginForm() {
     console.log("Form data:", loginData);
     console.log("Selected Role:", selectedRole);
 
-
     try {
       const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: "POST",
         body: formData,
       })
-
+  
       if (response.ok) {
-        const { access_token, token_type } = await response.json()
-        // Store credentials and role in localStorage
+        const { access_token, token_type, user_id } = await response.json()
+        // Store credentials, role, and user_id in localStorage
         localStorage.setItem("auth_token", access_token)
         localStorage.setItem("token_type", token_type)
         localStorage.setItem("username", loginData.username)
-        localStorage.setItem("userRole", selectedRole); // Store the selected role
-
+        localStorage.setItem("userRole", selectedRole)
+        localStorage.setItem("user_id", user_id) // Store the user_id
+  
         // --- Conditional Redirection ---
         if (selectedRole === 'doctor') {
           console.log(`Logged in as Doctor. Redirecting to /doctor-note...`);
-          router.push("/doctor-note"); // Redirect doctors here
+          router.push("/doctor-note");
         } else {
           console.log(`Logged in as Patient. Redirecting to /dashboard...`);
-          router.push("/dashboard"); // Redirect patients here
+          router.push("/dashboard");
         }
         // --- End Conditional Redirection ---
-
+  
       } else {
         const errorData = await response.json()
-        // Use optional chaining and provide a default message
         setError(errorData?.detail || "Invalid username or password")
       }
-
     } catch (error: unknown) {
-        console.error("Login error:", error);
-      // Provide more specific error messages if possible
+      console.error("Login error:", error);
       if (error instanceof TypeError && error.message.includes('fetch')) {
-           setError("Network error: Could not connect to the server.");
+        setError("Network error: Could not connect to the server.");
       } else if (error instanceof Error) {
         setError(error.message || "An error occurred during login");
       } else {
@@ -72,7 +69,6 @@ export function LoginForm() {
       }
     }
   }
-
   // Handler for radio button changes
   const handleRoleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedRole(event.target.value as UserRole);

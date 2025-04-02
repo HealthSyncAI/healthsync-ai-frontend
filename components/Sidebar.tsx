@@ -7,6 +7,8 @@ export default function Sidebar() {
   const router = useRouter();
 
   const menuItems = [
+    { name: "Health Record", path: "/health-record" },
+    { name: "Appointment", path: "/appointment" },
     { name: "Dashboard", path: "/dashboard" },
     { name: "Chatbot", path: "/chatbot" },
     // { name: "Doctor Notes", path: "/doctor-note" },
@@ -30,7 +32,7 @@ export default function Sidebar() {
     <div className="w-[239px] h-screen bg-white shadow-md flex flex-col justify-between sticky top-0">
       <div> {/* Top section */}
         <div className="p-6 flex items-center justify-center">
-           <Link href="/dashboard" className="text-[30px] font-bold text-primary no-underline hover:opacity-90">
+           <Link href="/health-record" className="text-[30px] font-bold text-primary no-underline hover:opacity-90">
              HealthSync AI
            </Link>
         </div>
