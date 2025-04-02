@@ -74,6 +74,7 @@ export default function Appointments() {
   const [healthRecord, setHealthRecord] = useState<HealthRecord | null>(null)
   const [recordLoading, setRecordLoading] = useState(false)
   const [recordError, setRecordError] = useState<string | null>(null)
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -90,7 +91,7 @@ export default function Appointments() {
           throw new Error("User ID not found")
         }
 
-        const response = await fetch("http://localhost:8000/api/appointment/my-appointments", {
+        const response = await fetch(`${apiUrl}/api/appointment/my-appointments`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -130,6 +131,7 @@ export default function Appointments() {
   const fetchHealthRecord = async (appointmentId: number) => {
     setRecordLoading(true)
     setRecordError(null)
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     try {
       const token = localStorage.getItem("auth_token")
@@ -140,7 +142,7 @@ export default function Appointments() {
 
       // First try to fetch using the appointment ID as the health record ID
       // This assumes there's a 1:1 relationship between appointments and health records
-      const response = await fetch(`http://localhost:8000/api/health-record/${appointmentId}`, {
+      const response = await fetch(`${apiUrl}/api/health-record/${appointmentId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -152,7 +154,7 @@ export default function Appointments() {
         if (response.status === 404) {
           // Fetch all health records for the patient
           const patientId = localStorage.getItem("user_id")
-          const allRecordsResponse = await fetch(`http://localhost:8000/api/health-record/patient/${patientId}`, {
+          const allRecordsResponse = await fetch(`${apiUrl}/api/health-record/patient/${patientId}`, {
             headers: {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
