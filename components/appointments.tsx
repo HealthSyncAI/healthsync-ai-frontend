@@ -117,32 +117,8 @@ export default function Appointments() {
     try {
       const date = parseISO(dateString)
       return format(date, "EEEE, MMMM d, yyyy")
-    } catch (e) {
+    } catch {
       return dateString
-    }
-  }
-
-  const formatTime = (dateString: string) => {
-    try {
-      const date = parseISO(dateString)
-      return format(date, "h:mm a")
-    } catch (e) {
-      return dateString
-    }
-  }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "scheduled":
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Scheduled</Badge>
-      case "completed":
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Completed</Badge>
-      case "cancelled":
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Cancelled</Badge>
-      case "no_show":
-        return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">No Show</Badge>
-      default:
-        return <Badge>{status}</Badge>
     }
   }
 
@@ -150,9 +126,6 @@ export default function Appointments() {
     return appointment.status === "scheduled" && new Date(appointment.start_time) > new Date()
   }
 
-  const isPast = (appointment: Appointment) => {
-    return appointment.status === "scheduled" && new Date(appointment.start_time) < new Date()
-  }
 
   const fetchHealthRecord = async (appointmentId: number) => {
     setRecordLoading(true)
@@ -432,7 +405,7 @@ function AppointmentCard({ appointment, onClick }: AppointmentCardProps) {
     try {
       const date = parseISO(dateString)
       return format(date, "EEEE, MMMM d, yyyy")
-    } catch (e) {
+    } catch {
       return dateString
     }
   }
@@ -441,7 +414,7 @@ function AppointmentCard({ appointment, onClick }: AppointmentCardProps) {
     try {
       const date = parseISO(dateString)
       return format(date, "h:mm a")
-    } catch (e) {
+    } catch {
       return dateString
     }
   }
