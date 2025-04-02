@@ -60,8 +60,9 @@ export default function BookingBox({
   }, [selectedTimeInternal, onTimeSelected]);
 
   const fetchDoctors = async () => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     try {
-      const response = await fetch("http://localhost:8000/api/appointment/doctors", {
+      const response = await fetch(`${apiUrl}/api/appointment/doctors`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

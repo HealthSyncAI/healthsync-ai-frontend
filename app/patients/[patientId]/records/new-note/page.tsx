@@ -34,10 +34,11 @@ export default function NewDoctorNotePage() {
             // Optionally redirect: router.push('/login');
             return;
         }
-        // ---
+        
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
         try {
-            const response = await fetch('http://localhost:8000/api/health-record/doctor-note', {
+            const response = await fetch(`${apiUrl}/api/health-record/doctor-note`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${storedToken}`,

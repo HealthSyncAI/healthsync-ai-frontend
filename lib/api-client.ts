@@ -12,13 +12,14 @@ function getAuthToken(): string | null {
 // Fetch doctors with authentication
 export async function fetchDoctors(): Promise<Doctor[]> {
   const token = getAuthToken()
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   if (!token) {
     throw new Error("Authentication token not found")
   }
 
   try {
-    const response = await fetch("http://localhost:8000/api/appointment/doctors", {
+    const response = await fetch(`${apiUrl}/api/appointment/doctors`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -42,13 +43,14 @@ export async function fetchDoctors(): Promise<Doctor[]> {
 // Fetch health records with authentication
 export async function fetchHealthRecords(): Promise<HealthRecord[]> {
   const token = getAuthToken()
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   if (!token) {
     throw new Error("Authentication token not found")
   }
 
   try {
-    const response = await fetch("http://localhost:8000/api/health-record", {
+    const response = await fetch(`${apiUrl}/api/health-record`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -72,13 +74,14 @@ export async function fetchHealthRecords(): Promise<HealthRecord[]> {
 // Fetch a specific health record by ID with authentication
 export async function fetchHealthRecordById(id: number): Promise<HealthRecord | null> {
   const token = getAuthToken()
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   if (!token) {
     throw new Error("Authentication token not found")
   }
 
   try {
-    const response = await fetch(`http://localhost:8000/api/health-record/${id}`, {
+    const response = await fetch(`${apiUrl}/api/health-record/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",

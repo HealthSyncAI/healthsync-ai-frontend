@@ -36,6 +36,7 @@ interface Doctor {
 // --- End interfaces ---
 
 export default function Chatbot() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const initialMessage = {
     sender: "bot",
     message: "Hello, how can I help you?",
@@ -100,6 +101,7 @@ export default function Chatbot() {
 
   // Modified fetchChatHistory to accept token
   const fetchChatHistory = async (authToken: string) => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     // **Important:** Check if authToken is valid before fetching
     if (!authToken) {
         console.error("fetchChatHistory called without a token.");
@@ -110,7 +112,7 @@ export default function Chatbot() {
     // Consider adding a loading state for history fetch
     // setIsLoadingHistory(true);
     try {
-      const response = await fetch("http://localhost:8000/api/chatbot/chats", {
+      const response = await fetch(`${apiUrl}/api/chatbot/chats`, {
         headers: {
           Authorization: `Bearer ${authToken}`, // Use the passed token
         },
@@ -165,7 +167,7 @@ export default function Chatbot() {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/api/chatbot/symptom",
+        `${apiUrl}/api/chatbot/symptom`,
         {
           method: "POST",
           headers: {
@@ -289,9 +291,11 @@ export default function Chatbot() {
       telemedicine_url: "https://example.com/meeting/abc", // Replace with actual URL logic
     };
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
     setIsConfirming(true);
     try {
-      const response = await fetch("http://localhost:8000/api/appointment", {
+      const response = await fetch(`${apiUrl}/api/appointment`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
