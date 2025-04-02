@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 // Define the possible roles
 type UserRole = 'patient' | 'doctor';
@@ -44,11 +45,11 @@ interface DoctorRegistrationData extends BaseUserData {
 export function RegisterForm() {
   const [error, setError] = useState<string | null>(null)
   const [selectedRole, setSelectedRole] = useState<UserRole>('patient');
+  const [gender, setGender] = useState<string>('');
   const router = useRouter()
 
   const contentRef = useRef<HTMLDivElement>(null);
   const [isScrollable, setIsScrollable] = useState(false);
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     const checkScrollable = () => {
@@ -68,21 +69,19 @@ export function RegisterForm() {
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
-
+  
     const formData = new FormData(event.currentTarget)
-    // --- Use the Type Union instead of any ---
     let data: PatientRegistrationData | DoctorRegistrationData;
-
+  
     const baseData = {
       username: formData.get("username") as string,
       email: formData.get("email") as string,
-      password: formData.get("password") as string, // Password needed for submission
+      password: formData.get("password") as string,
       first_name: formData.get("first_name") as string,
       last_name: formData.get("last_name") as string,
     };
-
+  
     if (selectedRole === 'doctor') {
-        // TypeScript now knows this should conform to DoctorRegistrationData
       data = {
         ...baseData,
         role: "doctor",
@@ -90,79 +89,79 @@ export function RegisterForm() {
         qualifications: formData.get("qualifications") as string,
         is_available: formData.get("is_available") === "true",
       };
-    } else { // Patient role
-        // TypeScript now knows this should conform to PatientRegistrationData
+    } else {
       data = {
         ...baseData,
-        // role: "patient", // Only add if needed
         date_of_birth: formData.get("date_of_birth") as string,
-        gender: formData.get("gender") as string,
+        gender: gender, // Use the gender state value
         height_cm: parseFloat(formData.get("height_cm") as string || "0"),
         weight_kg: parseFloat(formData.get("weight_kg") as string || "0"),
         blood_type: formData.get("blood_type") as string,
-        allergies: formData.get("allergies") as string || undefined, // Handle optional empty string
-        existing_conditions: formData.get("existing_conditions") as string || undefined, // Handle optional empty string
+        allergies: formData.get("allergies") as string || undefined,
+        existing_conditions: formData.get("existing_conditions") as string || undefined,
       };
     }
-
+  
     console.log("Submitting Form data:", data)
-
-
+  
     try {
-        const response = await fetch(`${apiUrl}/api/auth/register`, {
-            method: "POST",
-            headers: {
-            "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data), // Data now has a specific type
-        })
-
-        console.log("Response Status:", response.status);
-
-        if (response.ok) {
-            // ... (rest of the success logic remains the same)
-            const responseData = await response.json();
-            console.log("Registration successful:", responseData);
-
-            const access_token = responseData?.access_token;
-            const token_type = responseData?.token_type;
-            // data.username will be correctly typed here now
-            const username = data.username;
-
-            if (access_token && token_type && username) {
-                localStorage.setItem("auth_token", access_token);
-                localStorage.setItem("token_type", token_type);
-                localStorage.setItem("username", username);
-                localStorage.setItem("userRole", selectedRole);
-            } else {
-                 console.warn("Token not found in registration response. User may need to log in.");
-            }
-
-            if (selectedRole === 'doctor') {
-                console.log(`Registered as Doctor. Redirecting to /doctor-note...`);
-                router.push("/doctor-note");
-            } else {
-                console.log(`Registered as Patient. Redirecting to /dashboard...`);
-                router.push("/dashboard");
-            }
-
+      const response = await fetch("http://localhost:8000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      })
+  
+      console.log("Response Status:", response.status);
+  
+      if (response.ok) {
+        const responseData = await response.json();
+        console.log("Registration successful:", responseData);
+  
+        const access_token = responseData?.access_token;
+        const token_type = responseData?.token_type;
+        const user_id = responseData?.user_id; // Extract user_id from response
+        const username = data.username;
+  
+        if (access_token && token_type && username) {
+          localStorage.setItem("auth_token", access_token);
+          localStorage.setItem("token_type", token_type);
+          localStorage.setItem("username", username);
+          localStorage.setItem("userRole", selectedRole);
+          
+          // Store user_id in localStorage
+          if (user_id) {
+            localStorage.setItem("user_id", user_id.toString());
+          } else {
+            console.warn("User ID not found in registration response");
+          }
         } else {
-            // ... (error handling remains the same)
-             const errorData = await response.json();
-            console.error("Registration Error data:", errorData);
-            const message = errorData?.detail || errorData?.message || "An error occurred during registration";
-            setError(typeof message === 'string' ? message : JSON.stringify(message));
+          console.warn("Token not found in registration response. User may need to log in.");
         }
+  
+        if (selectedRole === 'doctor') {
+          console.log(`Registered as Doctor. Redirecting to /doctor-note...`);
+          router.push("/doctor-note");
+        } else {
+          console.log(`Registered as Patient. Redirecting to /health-record...`);
+          router.push("/health-record");
+        }
+      } else {
+        const errorData = await response.json();
+        console.error("Registration Error data:", errorData);
+        const message = errorData?.detail || errorData?.message || "An error occurred during registration";
+        setError(typeof message === 'string' ? message : JSON.stringify(message));
+      }
     } catch (error: unknown) {
-        // ... (catch block remains the same)
-         console.error("Registration submission error:", error);
-        if (error instanceof TypeError && error.message.includes('fetch')) {
-             setError("Network error: Could not connect to the server.");
-        } else if (error instanceof Error) {
-          setError(error.message || "An error occurred during registration");
-        } else {
-          setError("An unexpected error occurred during registration");
-        }
+      console.error("Registration submission error:", error);
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        setError("Network error: Could not connect to the server.");
+      } else if (error instanceof Error) {
+        setError(error.message || "An error occurred during registration");
+      } else {
+        setError("An unexpected error occurred during registration");
+      }
     }
   }
 
@@ -254,7 +253,21 @@ export function RegisterForm() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="gender">Gender</Label>
-                        <Input id="gender" name="gender" required />
+                        <Select 
+                          onValueChange={setGender} 
+                          value={gender} 
+                          required
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                            <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                          </SelectContent>
+                        </Select>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="height_cm">Height (cm)</Label>
