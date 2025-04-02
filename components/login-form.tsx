@@ -49,8 +49,8 @@ export function LoginForm() {
           console.log(`Logged in as Doctor. Redirecting to /doctor-note...`);
           router.push("/doctor-note");
         } else {
-          console.log(`Logged in as Patient. Redirecting to /dashboard...`);
-          router.push("/dashboard");
+          console.log(`Logged in as Patient. Redirecting to /health-record...`);
+          router.push("/health-record");
         }
         // --- End Conditional Redirection ---
   
