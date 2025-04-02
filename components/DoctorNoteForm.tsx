@@ -1,417 +1,149 @@
-// components/DoctorNoteForm.tsx
+// pages/doctor/appointments.tsx (or wherever your appointments page is)
 "use client";
-import React, { useState } from 'react';
-import { DoctorNote, Symptom, Diagnosis, TreatmentPlan, Medication } from '@/types/healthRecord';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // Import the router hook
 import Header from '@/components/Header';
 
-interface DoctorNoteFormProps {
-  onSubmit: (note: Omit<DoctorNote, 'id' | 'doctor_id' | 'record_type' | 'created_at' | 'updated_at'>) => void;
-  initialNote?: Omit<DoctorNote, 'id' | 'doctor_id' | 'record_type' | 'created_at' | 'updated_at'>;
+// Keep the Appointment interface as before
+interface Appointment {
+    id: number;
+    patient_id: number;
+    doctor_id: number;
+    start_time: string;
+    end_time: string;
+    status: string;
+    telemedicine_url?: string;
 }
 
-export default function DoctorNoteForm({ initialNote, onSubmit }: DoctorNoteFormProps) {
-  const [title, setTitle] = useState(initialNote?.title || '');
-  const [summary, setSummary] = useState(initialNote?.summary || '');
-  const [patientId, setPatientId] = useState(initialNote?.patient_id || 1);
-  const [symptoms, setSymptoms] = useState<Symptom[]>(initialNote?.symptoms || [{ name: '', severity: 0, duration: '', description: '' }]);
-  const [diagnosis, setDiagnosis] = useState<Diagnosis[]>(initialNote?.diagnosis || [{ name: '', icd10_code: '', description: '' }]);
-  const [treatmentPlan, setTreatmentPlan] = useState<TreatmentPlan[]>(initialNote?.treatment_plan || [{ description: '' }]);
-  const [medication, setMedication] = useState<Medication[]>(initialNote?.medication || [{ name: '', dosage: '', frequency: '' }]);
+export default function DoctorAppointmentsPage() {
+    const [appointments, setAppointments] = useState<Appointment[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const router = useRouter(); // Initialize the router
 
-  const handleAddSymptom = () => {
-    setSymptoms([...symptoms, { name: '', severity: 0, duration: '', description: '' }]);
-  };
+    // useEffect for fetching appointments remains largely the same...
+    useEffect(() => {
+        // --- IMPORTANT: Retrieve token securely ---
+        const storedToken = localStorage.getItem("auth_token");
+        // Add check here if storedToken is null/invalid and handle appropriately
+        if (!storedToken) {
+            setError("Authentication token not found. Please log in.");
+            setLoading(false);
+            // Optionally redirect to login: router.push('/login');
+            return;
+        }
+        // ---
 
-  const handleSymptomChange = (index: number, field: keyof Symptom, value: string | number) => {
-    const newSymptoms = [...symptoms];
-    newSymptoms[index][field] = value as never;
-    setSymptoms(newSymptoms);
-  };
+        const fetchAppointments = async () => {
+            setLoading(true);
+            setError(null);
 
-  const handleRemoveSymptom = (index: number) => {
-    const newSymptoms = symptoms.filter((_, i) => i !== index);
-    setSymptoms(newSymptoms);
-  };
+            try {
+                // Make sure the URL is correct for fetching doctor's appointments
+                const response = await fetch('http://localhost:8000/api/appointment/my-appointments', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${storedToken}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                });
 
-  const handleAddDiagnosis = () => {
-    setDiagnosis([...diagnosis, { name: '', icd10_code: '', description: '' }]);
-  };
+                if (!response.ok) {
+                    let errorBody = 'Failed to fetch appointments';
+                    try {
+                        const errorData = await response.json();
+                        errorBody = errorData.message || errorData.detail || JSON.stringify(errorData);
+                    } catch (parseError) {
+                        errorBody = `HTTP error ${response.status}: ${response.statusText} - ${parseError}`;
+                    }
+                    throw new Error(errorBody);
+                }
 
-  const handleDiagnosisChange = (index: number, field: keyof Diagnosis, value: string|number) => {
-    const newDiagnosis = [...diagnosis];
-    newDiagnosis[index][field] = value as never;
-    setDiagnosis(newDiagnosis);
-  };
+                const data: Appointment[] = await response.json();
+                console.log("Fetched appointments:", data);
+                setAppointments(data);
 
-  const handleRemoveDiagnosis = (index: number) => {
-    const newDiagnosis = diagnosis.filter((_, i) => i !== index);
-    setDiagnosis(newDiagnosis);
-  };
+            } catch (err: unknown) { // Use 'unknown' instead of 'any'
+                console.error("Error fetching appointments:", err);
 
-  const handleAddTreatmentPlan = () => {
-    setTreatmentPlan([...treatmentPlan, { description: '' }]);
-  };
+                // Check if the error is an instance of Error
+                if (err instanceof Error) {
+                    setError(err.message || 'An unexpected error occurred.');
+                } else {
+                    setError('An unexpected error occurred.');
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
 
-  const handleTreatmentPlanChange = (index: number, field: keyof TreatmentPlan, value: string) => {
-    const newTreatmentPlan = [...treatmentPlan];
-    newTreatmentPlan[index][field] = value;
-    setTreatmentPlan(newTreatmentPlan);
-  };
+        fetchAppointments();
+    }, [router]); // Add router to dependency array if you use it for redirection inside useEffect
 
-  const handleRemoveTreatmentPlan = (index: number) => {
-    const newTreatmentPlan = treatmentPlan.filter((_, i) => i !== index);
-    setTreatmentPlan(newTreatmentPlan);
-  };
-
-  const handleAddMedication = () => {
-    setMedication([...medication, { name: '', dosage: '', frequency: '' }]);
-  };
-
-  const handleMedicationChange = (index: number, field: keyof Medication, value: string) => {
-    const newMedication = [...medication];
-    newMedication[index][field] = value;
-    setMedication(newMedication);
-  };
-
-  const handleRemoveMedication = (index: number) => {
-    const newMedication = medication.filter((_, i) => i !== index);
-    setMedication(newMedication);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const noteData: Omit<DoctorNote, 'id' | 'doctor_id' | 'record_type' | 'created_at' | 'updated_at'> = {
-      title,
-      summary,
-      patient_id: patientId,
-      symptoms,
-      diagnosis,
-      treatment_plan: treatmentPlan,
-      medication,
+    // formatDateTime function remains the same...
+    const formatDateTime = (isoString: string) => {
+        if (!isoString) return 'N/A';
+        try {
+            return new Date(isoString).toLocaleString(undefined, {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+            });
+        } catch (e) {
+            console.error("Error formatting date:", isoString, e);
+            return isoString;
+        }
     };
 
-    onSubmit(noteData);
-  };
+    // *** UPDATE THIS FUNCTION ***
+    const handleViewHealthRecord = (patientId: number) => {
+        console.log(`Navigating to health records for patient ID: ${patientId}`);
+        // Navigate to the dynamic route for patient health records
+        // Adjust the path according to your file structure
+        router.push(`/patients/${patientId}/records`);
+    };
 
-  return (
-    <div className="bg-gray-100 min-h-screen">
-      <Header />
-      <div className="container mx-auto p-6">
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-md shadow-md grid gap-6 md:grid-cols-2">
-          {/* General Information */}
-          <div className="col-span-full">
-            <h2 className="text-xl font-semibold mb-4">General Information</h2>
-            <div className="mb-4">
-              <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">
-                Title:
-              </label>
-              <input
-                type="text"
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              />
+    // JSX rendering structure remains the same...
+    // Ensure the onClick handler for the button correctly calls handleViewHealthRecord
+    return (
+        <div className="bg-gray-100 min-h-screen">
+            <Header />
+            <div className="container mx-auto p-6">
+                <h1 className="text-3xl font-bold mb-6 text-gray-800">Your Appointments</h1>
+
+                {/* Loading, Error, No Appointments messages remain the same */}
+                {loading && <div className="text-center py-10"><p>Loading appointments...</p></div>}
+                {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6" role="alert"><strong>Error: </strong>{error}</div>}
+                {!loading && !error && appointments.length === 0 && <div className="text-center py-10"><p>No appointments found.</p></div>}
+
+                {!loading && !error && appointments.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {appointments.map((appointment) => (
+                            <div key={appointment.id} className="bg-white p-5 rounded-lg shadow-md flex flex-col justify-between hover:shadow-lg transition-shadow duration-200">
+                                <div>
+                                    {/* Appointment details rendering remains the same */}
+                                    <h2 className="text-xl font-semibold mb-3 text-primary">Appointment #{appointment.id}</h2>
+                                    <p className="text-gray-700 mb-2"><span className="font-medium">Patient ID:</span> {appointment.patient_id}</p>
+                                    <p className="text-gray-700 mb-2"><span className="font-medium">Starts:</span> {formatDateTime(appointment.start_time)}</p>
+                                    <p className="text-gray-700 mb-2"><span className="font-medium">Ends:</span> {formatDateTime(appointment.end_time)}</p>
+                                    <p className="text-gray-700 mb-2 capitalize"><span className="font-medium">Status:</span> <span className={`ml-2 px-2 py-0.5 rounded text-sm font-medium ${appointment.status === 'scheduled' ? 'bg-blue-100 text-blue-800' : appointment.status === 'completed' ? 'bg-green-100 text-green-800' : appointment.status === 'cancelled' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>{appointment.status}</span></p>
+                                    {appointment.telemedicine_url && (
+                                        <p className="text-gray-700 mb-4 break-words"><span className="font-medium">Meeting Link:</span> <a href={appointment.telemedicine_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 hover:underline">Join Telemedicine Session</a></p>
+                                    )}
+                                </div>
+                                {/* Ensure onClick calls the updated handler */}
+                                <button
+                                    onClick={() => handleViewHealthRecord(appointment.patient_id)}
+                                    className="mt-4 w-full bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200"
+                                >
+                                    View Health Record
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
-            <div className="mb-4">
-              <label htmlFor="summary" className="block text-gray-700 text-sm font-bold mb-2">
-                Summary:
-              </label>
-              <textarea
-                id="summary"
-                value={summary}
-                onChange={(e) => setSummary(e.target.value)}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              />
-            </div>
-            <div className="mb-4">
-              <label htmlFor="patientId" className="block text-gray-700 text-sm font-bold mb-2">
-                Patient ID:
-              </label>
-              <input
-                type="number"
-                id="patientId"
-                value={patientId}
-                onChange={(e) => setPatientId(parseInt(e.target.value))}
-                required
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              />
-            </div>
-          </div>
-
-          {/* Symptoms */}
-          <div className="col-span-full md:col-span-1">
-            <h3 className="text-lg font-semibold mb-3">Symptoms</h3>
-            {symptoms.map((symptom, index) => (
-              <div key={index} className="mb-4 p-4 border rounded-md">
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label htmlFor={`symptom-name-${index}`} className="block text-gray-700 text-sm font-bold mb-2">Name:</label>
-                    <input
-                      type="text"
-                      id={`symptom-name-${index}`}
-                      placeholder="Name"
-                      value={symptom.name}
-                      onChange={(e) => handleSymptomChange(index, 'name', e.target.value)}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={`symptom-severity-${index}`} className="block text-gray-700 text-sm font-bold mb-2">Severity (1-10):</label>
-                    <input
-                      type="number"
-                      id={`symptom-severity-${index}`}
-                      placeholder="Severity"
-                      value={symptom.severity}
-                      onChange={(e) => handleSymptomChange(index, 'severity', parseInt(e.target.value))}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={`symptom-duration-${index}`} className="block text-gray-700 text-sm font-bold mb-2">Duration:</label>
-                    <input
-                      type="text"
-                      id={`symptom-duration-${index}`}
-                      placeholder="Duration"
-                      value={symptom.duration}
-                      onChange={(e) => handleSymptomChange(index, 'duration', e.target.value)}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={`symptom-description-${index}`} className="block text-gray-700 text-sm font-bold mb-2">Description:</label>
-                    <textarea
-                      id={`symptom-description-${index}`}
-                      placeholder="Description"
-                      value={symptom.description}
-                      onChange={(e) => handleSymptomChange(index, 'description', e.target.value)}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    />
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveSymptom(index)}
-                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={handleAddSymptom}
-              className="bg-primary hover:bg-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
-            >
-              Add Symptom
-            </button>
-          </div>
-
-          {/* Diagnosis */}
-          <div className="col-span-full md:col-span-1">
-            <h3 className="text-lg font-semibold mb-3">Diagnosis</h3>
-            {diagnosis.map((diag, index) => (
-              <div key={index} className="mb-4 p-4 border rounded-md">
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label htmlFor={`diagnosis-name-${index}`} className="block text-gray-700 text-sm font-bold mb-2">Name:</label>
-                    <input
-                      type="text"
-                      id={`diagnosis-name-${index}`}
-                      placeholder="Name"
-                      value={diag.name}
-                      onChange={(e) => handleDiagnosisChange(index, 'name', e.target.value)}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={`diagnosis-icd10-${index}`} className="block text-gray-700 text-sm font-bold mb-2">ICD-10 Code:</label>
-                    <input
-                      type="text"
-                      id={`diagnosis-icd10-${index}`}
-                      placeholder="ICD-10 Code"
-                      value={diag.icd10_code}
-                      onChange={(e) => handleDiagnosisChange(index, 'icd10_code', e.target.value)}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={`diagnosis-description-${index}`} className="block text-gray-700 text-sm font-bold mb-2">Description:</label>
-                    <textarea
-                      id={`diagnosis-description-${index}`}
-                      placeholder="Description"
-                      value={diag.description}
-                      onChange={(e) => handleDiagnosisChange(index, 'description', e.target.value)}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    />
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveDiagnosis(index)}
-                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={handleAddDiagnosis}
-              className="bg-primary hover:bg-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
-            >
-              Add Diagnosis
-            </button>
-          </div>
-
-          {/* Treatment Plan */}
-          <div className="col-span-full md:col-span-1">
-            <h3 className="text-lg font-semibold mb-3">Treatment Plan</h3>
-            {treatmentPlan.map((plan, index) => (
-              <div key={index} className="mb-4 p-4 border rounded-md">
-                <div className="mb-2">
-                  <label htmlFor={`treatment-description-${index}`} className="block text-gray-700 text-sm font-bold mb-2">Description:</label>
-                  <textarea
-                    id={`treatment-description-${index}`}
-                    placeholder="Description"
-                    value={plan.description}
-                    onChange={(e) => handleTreatmentPlanChange(index, 'description', e.target.value)}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  />
-                </div>
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label htmlFor={`treatment-duration-${index}`} className="block text-gray-700 text-sm font-bold mb-2">Duration (optional):</label>
-                    <input
-                      type="text"
-                      id={`treatment-duration-${index}`}
-                      placeholder="Duration"
-                      value={plan.duration || ''}
-                      onChange={(e) => handleTreatmentPlanChange(index, 'duration', e.target.value)}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={`treatment-followup-${index}`} className="block text-gray-700 text-sm font-bold mb-2">Follow-up (optional):</label>
-                    <input
-                      type="text"
-                      id={`treatment-followup-${index}`}
-                      placeholder="Follow-up"
-                      value={plan.follow_up || ''}
-                      onChange={(e) => handleTreatmentPlanChange(index, 'follow_up', e.target.value)}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    />
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveTreatmentPlan(index)}
-                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={handleAddTreatmentPlan}
-              className="bg-primary hover:bg-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
-            >
-              Add Treatment Plan
-            </button>
-          </div>
-
-          {/* Medication */}
-          <div className="col-span-full md:col-span-1">
-            <h3 className="text-lg font-semibold mb-3">Medication</h3>
-            {medication.map((med, index) => (
-              <div key={index} className="mb-4 p-4 border rounded-md">
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label htmlFor={`medication-name-${index}`} className="block text-gray-700 text-sm font-bold mb-2">Name:</label>
-                    <input
-                      type="text"
-                      id={`medication-name-${index}`}
-                      placeholder="Name"
-                      value={med.name}
-                      onChange={(e) => handleMedicationChange(index, 'name', e.target.value)}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={`medication-dosage-${index}`} className="block text-gray-700 text-sm font-bold mb-2">Dosage:</label>
-                    <input
-                      type="text"
-                      id={`medication-dosage-${index}`}
-                      placeholder="Dosage"
-                      value={med.dosage}
-                      onChange={(e) => handleMedicationChange(index, 'dosage', e.target.value)}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={`medication-frequency-${index}`} className="block text-gray-700 text-sm font-bold mb-2">Frequency:</label>
-                    <input
-                      type="text"
-                      id={`medication-frequency-${index}`}
-                      placeholder="Frequency"
-                      value={med.frequency}
-                      onChange={(e) => handleMedicationChange(index, 'frequency', e.target.value)}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={`medication-duration-${index}`} className="block text-gray-700 text-sm font-bold mb-2">Duration (optional):</label>
-                    <input
-                      type="text"
-                      id={`medication-duration-${index}`}
-                      placeholder="Duration"
-                      value={med.duration || ''}
-                      onChange={(e) => handleMedicationChange(index, 'duration', e.target.value)}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor={`medication-notes-${index}`} className="block text-gray-700 text-sm font-bold mb-2">Notes (optional):</label>
-                    <input
-                      type="text"
-                      id={`medication-notes-${index}`}
-                      placeholder="Notes"
-                      value={med.notes || ''}
-                      onChange={(e) => handleMedicationChange(index, 'notes', e.target.value)}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    />
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveMedication(index)}
-                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={handleAddMedication}
-              className="bg-primary hover:bg-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
-            >
-              Add Medication
-            </button>
-          </div>
-
-          <div className="col-span-full">
-            <button
-              type="submit"
-              className="bg-primary hover:bg-primary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            >
-              Save Doctor Note
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
+        </div>
+    );
+}

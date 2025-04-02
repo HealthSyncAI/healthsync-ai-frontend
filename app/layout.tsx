@@ -23,7 +23,7 @@ export default function RootLayout({
   const pathname = usePathname(); // Get the current route
   // Added check for login/register pages explicitly if they should not have sidebar
   const isAuthPage = pathname === "/" || pathname === "/register"; // Adjust if register path is different
-  const doctorPage = pathname.includes("/doctor"); // Check if the current route is the doctor page
+  const doctorPage = pathname.includes("/doctor") || pathname.includes("/patient"); // Check if the current route is the doctor page
 
   // Determine if sidebar should be shown
   const showSidebar = !isAuthPage && !doctorPage;

@@ -2,7 +2,7 @@
 
 export interface Symptom {
     name: string;
-    severity: number;
+    severity: number | null;
     duration: string;
     description: string;
   }
