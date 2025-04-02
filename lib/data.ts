@@ -11,9 +11,10 @@ function safeLocalStorage() {
   // Fetch doctors from the API and store in localStorage
   export async function getDoctors(): Promise<Doctor[]> {
     const localStorage = safeLocalStorage();
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   
     try {
-      const response = await fetch("http://localhost:8000/api/appointment/doctors", {
+      const response = await fetch(`${apiUrl}/api/appointment/doctors`, {
         cache: "no-store",
       });
   
@@ -45,9 +46,10 @@ function safeLocalStorage() {
   // Fetch health records from the API and store in localStorage
   export async function getHealthRecords(): Promise<HealthRecord[]> {
     const localStorage = safeLocalStorage();
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   
     try {
-      const response = await fetch("http://localhost:8000/api/health-record", {
+      const response = await fetch(`${apiUrl}/api/health-record`, {
         cache: "no-store",
       });
   
@@ -79,9 +81,10 @@ function safeLocalStorage() {
   // Fetch a specific health record by ID and filter by user ID
   export async function getHealthRecordById(id: number, userId: number): Promise<HealthRecord | null> {
     const localStorage = safeLocalStorage();
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   
     try {
-      const response = await fetch(`http://localhost:8000/api/health-record/${id}`, {
+      const response = await fetch(`${apiUrl}/api/health-record/${id}`, {
         cache: "no-store",
       });
   

@@ -31,6 +31,7 @@ interface Statistics {
 }
 
 export default function PatientDashboard() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [statistics, setStatistics] = useState<Statistics | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -40,7 +41,7 @@ export default function PatientDashboard() {
       try {
         setLoading(true)
         // In a production environment, you would use an environment variable for the API URL
-        const response = await fetch("http://localhost:8000/api/statistics/")
+        const response = await fetch(`${apiUrl}/api/statistics/`)
 
         if (!response.ok) {
           throw new Error(`Error fetching statistics: ${response.status}`)

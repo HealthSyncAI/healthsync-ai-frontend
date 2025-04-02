@@ -77,11 +77,12 @@ export default function PatientHealthRecordPage() {
       // ---
 
       const fetchHealthRecords = async () => {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         setLoading(true);
         setError(null);
         try {
           const response = await fetch(
-            `http://localhost:8000/api/health-record/patient/${patientId}`,
+            `${apiUrl}/api/health-record/patient/${patientId}`,
             {
               method: "GET",
               headers: {

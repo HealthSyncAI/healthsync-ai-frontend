@@ -36,12 +36,13 @@ export default function DoctorAppointmentsPage() {
         // ---
 
         const fetchAppointments = async () => {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
             setLoading(true);
             setError(null);
 
             try {
                 // Make sure the URL is correct for fetching doctor's appointments
-                const response = await fetch('http://localhost:8000/api/appointment/my-appointments', {
+                const response = await fetch(`${apiUrl}/api/appointment/my-appointments`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${storedToken}`,

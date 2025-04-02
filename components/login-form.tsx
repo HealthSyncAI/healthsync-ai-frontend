@@ -28,8 +28,10 @@ export function LoginForm() {
     console.log("Form data:", loginData);
     console.log("Selected Role:", selectedRole);
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
     try {
-      const response = await fetch("http://localhost:8000/api/auth/login", {
+      const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: "POST",
         body: formData,
       })
