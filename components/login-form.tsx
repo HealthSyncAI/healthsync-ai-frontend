@@ -15,6 +15,7 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [selectedRole, setSelectedRole] = useState<UserRole>('patient'); // Default to 'patient'
   const router = useRouter()
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -28,7 +29,6 @@ export function LoginForm() {
     console.log("Form data:", loginData);
     console.log("Selected Role:", selectedRole);
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     try {
       const response = await fetch(`${apiUrl}/api/auth/login`, {

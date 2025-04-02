@@ -48,6 +48,7 @@ export function RegisterForm() {
 
   const contentRef = useRef<HTMLDivElement>(null);
   const [isScrollable, setIsScrollable] = useState(false);
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     const checkScrollable = () => {
@@ -106,7 +107,6 @@ export function RegisterForm() {
 
     console.log("Submitting Form data:", data)
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     try {
         const response = await fetch(`${apiUrl}/api/auth/register`, {
