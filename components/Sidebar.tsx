@@ -7,6 +7,8 @@ export default function Sidebar() {
   const router = useRouter();
 
   const menuItems = [
+    { name: "Health Record", path: "/health-record" },
+    { name: "Appointment", path: "/appointment" },
     { name: "Dashboard", path: "/dashboard" },
     { name: "Chatbot", path: "/chatbot" },
     // { name: "Doctor Notes", path: "/doctor-note" },
