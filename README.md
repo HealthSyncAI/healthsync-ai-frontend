@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HealthSync AI Frontend
+
+This README provides instructions on how to set up and run the HealthSync AI frontend project locally.
 
 ## Getting Started
 
-First, run the development server:
+Follow these steps to get the development environment running:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1.  **Clone the repository:**
+    Open your terminal or command prompt and run the following git command:
+    ```bash
+    git clone https://github.com/HealthSyncAI/healthsync-ai-frontend.git
+    ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2.  **Navigate to the project directory:**
+    Change your current directory to the newly cloned folder:
+    ```bash
+    cd healthsync-ai-frontend
+    ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3.  **Install dependencies:**
+    Choose *one* of the following package managers to install the necessary project dependencies. Make sure you have the chosen package manager installed on your system (Node.js is required for npm).
+    ```bash
+    # Using npm (comes with Node.js)
+    npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+    # Using Yarn (install separately if needed)
+    # yarn install
 
-## Learn More
+    # Using pnpm (install separately if needed)
+    # pnpm install
 
-To learn more about Next.js, take a look at the following resources:
+    # Using Bun (install separately if needed)
+    # bun install
+    ```
+    *Note: Uncomment and use the command corresponding to your preferred package manager.*
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+4.  **Run the development server:**
+    Start the local development server using the corresponding command for the package manager you used in the previous step:
+    ```bash
+    # If you used npm
+    npm run dev
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+    # If you used Yarn
+    # yarn dev
 
-## Deploy on Vercel
+    # If you used pnpm
+    # pnpm dev
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+    # If you used Bun
+    # bun dev
+    ```
+    *Note: Uncomment and use the command corresponding to your preferred package manager.*
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5.  **Open the application:**
+    Once the server starts, open your web browser and navigate to [http://localhost:3000](http://localhost:3000) (or the specific port indicated in your terminal output) to see the application running.
