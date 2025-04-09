@@ -114,13 +114,12 @@ export function RegisterForm() {
             headers: {
             "Content-Type": "application/json",
             },
-            body: JSON.stringify(data), // Data now has a specific type
+            body: JSON.stringify(data),
         })
 
         console.log("Response Status:", response.status);
 
         if (response.ok) {
-            // ... (rest of the success logic remains the same)
             const responseData = await response.json();
             console.log("Registration successful:", responseData);
 
